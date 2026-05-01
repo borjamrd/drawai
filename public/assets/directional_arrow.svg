@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#E67E22"/>
+  <polygon points="32,8 56,32 44,32 44,56 20,56 20,32 8,32" fill="#ECF0F1" stroke="#D35400" stroke-width="1.5"/>
+  <text x="32" y="62" text-anchor="middle" font-size="5" fill="white" font-family="sans-serif">flecha</text>
+</svg>

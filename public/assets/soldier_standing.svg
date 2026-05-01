@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#3B5BA5"/>
+  <circle cx="32" cy="14" r="8" fill="#F5CBA7"/>
+  <rect x="22" y="24" width="20" height="24" rx="3" fill="#2C4A8A"/>
+  <rect x="18" y="48" width="8" height="12" rx="2" fill="#1A2F5E"/>
+  <rect x="38" y="48" width="8" height="12" rx="2" fill="#1A2F5E"/>
+  <rect x="10" y="26" width="6" height="18" rx="2" fill="#2C4A8A"/>
+  <rect x="48" y="26" width="6" height="18" rx="2" fill="#2C4A8A"/>
+  <text x="32" y="62" text-anchor="middle" font-size="5" fill="white" font-family="sans-serif">soldado</text>
+</svg>
