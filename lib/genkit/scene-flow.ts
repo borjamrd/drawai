@@ -64,3 +64,29 @@ export const generateSceneFlow = ai.defineFlow(
     return output!
   }
 )
+
+export const generateSvgOptionsFlow = ai.defineFlow(
+  {
+    name: 'generateSvgOptions',
+    inputSchema: z.string(),
+    outputSchema: z.array(z.string()),
+  },
+  async (prompt) => {
+    const { output } = await ai.generate({
+      system: `You are a professional minimalist illustrator specializing in "hand-drawn" (handraw) sketches.
+Your style:
+- Black and white only.
+- Transparent background.
+- Minimalist, single-stroke feel where possible.
+- Irregular, slightly wobbly lines to look like a human drawing.
+- Standard viewBox="0 0 100 100".
+- Clean SVG code without comments or extra tags.
+
+Generate 3 distinct visual variants for the user's prompt: ${prompt}.
+Return ONLY a JSON array of 3 SVG strings.`,
+      prompt: prompt,
+      output: { schema: z.array(z.string()) },
+    })
+    return output!
+  }
+)
