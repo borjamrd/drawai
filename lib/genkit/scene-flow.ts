@@ -86,6 +86,64 @@ OUTPUT RULES:
 - Only use library_id values from the list above. Never invent new IDs.`;
 }
 
+const ScenePlanItemSchema = z.object({
+  title: z.string().describe("Short scene title (max 6 words, no punctuation)"),
+  excerpt: z
+    .string()
+    .describe("Relevant fragment copied from the user's input that this scene covers"),
+  key_concepts: z
+    .array(z.string())
+    .min(1)
+    .max(4)
+    .describe(
+      "2-3 concrete visual concepts to illustrate this scene — concrete nouns that can be drawn as SVG illustrations",
+    ),
+});
+
+export const PresentationPlanSchema = z.object({
+  title: z.string().describe("Short overall presentation title"),
+  scenes: z
+    .array(ScenePlanItemSchema)
+    .min(1)
+    .max(6)
+    .describe("Ordered list of 2-6 scenes covering the input content"),
+});
+
+export type PresentationPlan = z.infer<typeof PresentationPlanSchema>;
+
+export const planPresentationFlow = ai.defineFlow(
+  {
+    name: "planPresentation",
+    inputSchema: z.string(),
+    outputSchema: PresentationPlanSchema,
+  },
+  async (userInput) => {
+    const { output } = await ai.generate({
+      system: `You are a pedagogical content director for animated educational videos.
+
+Your task: analyze the user's content and divide it into 2-6 coherent educational scenes.
+
+RULES:
+- Each scene must cover one clear conceptual unit
+- Scenes must flow logically: chronological, thematic, or cause→effect
+- excerpt: copy the most relevant fragment verbatim from the user's input (do not paraphrase)
+  If the input is brief, the excerpt can be a short summary of what this scene covers
+- key_concepts: 2-3 CONCRETE nouns that can be illustrated as SVG drawings
+  Good: "corona", "libro de derecho", "pueblo", "balanza", "soldado", "bandera"
+  Bad: "democracia" alone (too abstract), "principios" (not drawable)
+  Exception: well-known symbolic abstractions are acceptable if they have an iconic visual form
+  ("libertad" → figure with torch, "justicia" → scales and blindfold)
+- title: short, descriptive, max 6 words, no punctuation
+- Use between 2 and 6 scenes — as few as needed to cover the content clearly
+
+OUTPUT: Respond ONLY with valid JSON. No markdown, no explanation, no extra text.`,
+      prompt: userInput,
+      output: { schema: PresentationPlanSchema },
+    });
+    return output!;
+  },
+);
+
 export const generateSceneFlow = ai.defineFlow(
   {
     name: "generateScene",

@@ -8,13 +8,13 @@ import { cn } from '@/lib/utils'
 
 function ScenePlanCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[300px] animate-pulse rounded-xl border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-900/50 p-5 space-y-3.5">
+    <div className="flex-shrink-0 w-[300px] animate-pulse space-y-3.5 rounded-xl border border-zinc-100 bg-zinc-50 p-5 dark:border-zinc-800/60 dark:bg-zinc-900/50">
       <div className="h-2.5 w-6 rounded bg-zinc-200 dark:bg-zinc-800" />
       <div className="h-4 w-3/4 rounded bg-zinc-200 dark:bg-zinc-800" />
       <div className="space-y-1.5">
-        <div className="h-3 w-full rounded bg-zinc-150 dark:bg-zinc-800/80" />
-        <div className="h-3 w-5/6 rounded bg-zinc-150 dark:bg-zinc-800/80" />
-        <div className="h-3 w-2/3 rounded bg-zinc-150 dark:bg-zinc-800/80" />
+        <div className="h-3 w-full rounded bg-zinc-100 dark:bg-zinc-800/80" />
+        <div className="h-3 w-5/6 rounded bg-zinc-100 dark:bg-zinc-800/80" />
+        <div className="h-3 w-2/3 rounded bg-zinc-100 dark:bg-zinc-800/80" />
       </div>
       <div className="flex gap-1.5">
         <div className="h-5 w-16 rounded-md bg-zinc-100 dark:bg-zinc-800/80" />
@@ -44,9 +44,7 @@ function StoryboardEmptyState() {
 
 const containerVariants = {
   hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.07 },
-  },
+  visible: { transition: { staggerChildren: 0.07 } },
 }
 
 const cardVariants = {
@@ -63,7 +61,10 @@ interface StoryboardViewProps {
   isLoading?: boolean
   skeletonCount?: number
   canConfirm?: boolean
+  canEdit?: boolean
   onConfirm?: () => void
+  onUpdateScene?: (index: number, changes: Pick<ScenePlan, 'title' | 'key_concepts'>) => void
+  onMoveScene?: (fromIndex: number, toIndex: number) => void
 }
 
 export function StoryboardView({
@@ -71,11 +72,13 @@ export function StoryboardView({
   isLoading = false,
   skeletonCount = 3,
   canConfirm = false,
+  canEdit = false,
   onConfirm,
+  onUpdateScene,
+  onMoveScene,
 }: StoryboardViewProps) {
   const hasGenerating = scenes.some((s) => s.status.startsWith('generating_'))
   const confirmEnabled = canConfirm && scenes.length > 0 && !hasGenerating
-
   const showHeader = isLoading || scenes.length > 0
 
   return (
@@ -113,7 +116,7 @@ export function StoryboardView({
         </div>
       )}
 
-      <div className="overflow-x-auto pb-3 -mx-1 px-1">
+      <div className="-mx-1 overflow-x-auto px-1 pb-3">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <div key="skeleton" className="flex gap-4" style={{ width: 'max-content' }}>
@@ -134,7 +137,15 @@ export function StoryboardView({
             >
               {scenes.map((scene, i) => (
                 <motion.div key={scene.id} variants={cardVariants}>
-                  <ScenePlanCard plan={scene} index={i} />
+                  <ScenePlanCard
+                    plan={scene}
+                    index={i}
+                    total={scenes.length}
+                    canEdit={canEdit}
+                    onUpdate={(changes) => onUpdateScene?.(i, changes)}
+                    onMoveLeft={() => onMoveScene?.(i, i - 1)}
+                    onMoveRight={() => onMoveScene?.(i, i + 1)}
+                  />
                 </motion.div>
               ))}
             </motion.div>
