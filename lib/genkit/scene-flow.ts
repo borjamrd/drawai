@@ -114,17 +114,26 @@ Return ONLY the enriched prompt. One sentence. No explanation. No quotes.`,
   },
 );
 
-const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. White background, no color.
+const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. White background, no color, no background scene.
 Pen contour lines only — minimalist ink sketch, sparse deliberate strokes.
-Realistic proportions, clearly recognizable subject.
+Realistic proportions. Single isolated subject, centered, full body visible.
+Exactly one subject. No other figures, no duplicates, no background elements.
 No shading, no gradients, no fills. Line art only.`;
 
-export async function generateImageOptionsFlow(prompt: string): Promise<string[]> {
-  const fullPrompt = `${IMAGE_STYLE_PROMPT}\nSubject: ${prompt}.`;
+export async function generateImageOptionsFlow(
+  prompt: string,
+): Promise<string[]> {
+  const fullPrompt = `${IMAGE_STYLE_PROMPT}\nDraw exactly one: ${prompt}.`;
   const response = await genai.models.generateContent({
     model: "gemini-3.1-flash-image-preview",
     contents: fullPrompt,
-    config: { responseModalities: ["IMAGE"] },
+    config: {
+      responseModalities: ["IMAGE"],
+      imageConfig: {
+        aspectRatio: "1:1",
+        imageSize: "512",
+      },
+    },
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const parts: any[] = response.candidates?.[0]?.content?.parts ?? [];
