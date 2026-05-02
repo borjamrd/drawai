@@ -58,5 +58,11 @@
     "label": "Mapa",
     "description": "Mapa en blanco de america",
     "svgPath": "/assets/mapa.png"
+  },
+  {
+    "id": "crea-una-institucion-edificio-del-inap-muestra-un-cartel",
+    "label": "Crea una institucion (edificio) del INAP (muestra un cartel",
+    "description": "Crea una institucion (edificio) del INAP (muestra un cartel con el titulo)",
+    "svgPath": "/assets/crea-una-institucion-edificio-del-inap-muestra-un-cartel.png"
   }
 ]

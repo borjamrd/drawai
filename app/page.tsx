@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Film } from 'lucide-react'
+import { ArrowRight, Film, Grid3X3 } from 'lucide-react'
 import { SceneCanvas } from '@/components/SceneCanvas'
 import type { Scene } from '@/lib/genkit/scene-flow'
 
@@ -11,6 +11,7 @@ export default function Home() {
   const [scene, setScene] = useState<Scene | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showGrid, setShowGrid] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,6 +84,26 @@ export default function Home() {
             {isLoading ? 'Generando…' : 'Generar escena'}
           </motion.button>
         </form>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-600">
+            Vista
+          </p>
+          <motion.button
+            type="button"
+            onClick={() => setShowGrid((g) => !g)}
+            whileTap={{ scale: 0.97, y: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className={`flex items-center gap-2 self-start rounded-lg px-4 py-2 text-sm font-medium border transition-colors ${
+              showGrid
+                ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-transparent'
+                : 'text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+            }`}
+          >
+            <Grid3X3 className="h-4 w-4" strokeWidth={1.5} />
+            Cuadrícula
+          </motion.button>
+        </div>
       </div>
 
       {/* Right panel: canvas output */}
@@ -110,7 +131,7 @@ export default function Home() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ type: 'spring', stiffness: 100, damping: 20 }}
             >
-              <SceneCanvas scene={scene} />
+              <SceneCanvas scene={scene} showGrid={showGrid} />
             </motion.div>
           )}
 

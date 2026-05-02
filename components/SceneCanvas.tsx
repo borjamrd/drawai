@@ -17,11 +17,17 @@ const ENTRY_VARIANTS: Record<EntryEffect, { initial: TargetAndTransition; animat
   bounce:      { initial: { opacity: 0, y: -40 },      animate: { opacity: 1, y: 0 } },
 }
 
+// 800×450 canvas → 16 cols × 9 rows of 50px squares (exact fit)
+const GRID_COLS = 16
+const GRID_ROWS = 9
+const GRID_CELLS = GRID_COLS * GRID_ROWS
+
 interface SceneCanvasProps {
   scene: Scene
+  showGrid?: boolean
 }
 
-export function SceneCanvas({ scene }: SceneCanvasProps) {
+export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set())
   const [playKey, setPlayKey] = useState(0)
 
@@ -54,6 +60,25 @@ export function SceneCanvas({ scene }: SceneCanvasProps) {
       </div>
 
       <div className="relative w-[800px] h-[450px] bg-white border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
+        {/* Hover cells — rendered below scene elements */}
+        {showGrid && (
+          <div
+            className="absolute inset-0"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+              gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
+            }}
+          >
+            {Array.from({ length: GRID_CELLS }).map((_, i) => (
+              <div
+                key={i}
+                className="hover:bg-zinc-100 dark:hover:bg-zinc-900/30 transition-colors duration-150"
+              />
+            ))}
+          </div>
+        )}
+
         {scene.elements.map((el, i) => {
           if (!visibleIndices.has(i)) return null
           const asset = SVG_LIBRARY_MAP[el.library_id]
@@ -84,6 +109,36 @@ export function SceneCanvas({ scene }: SceneCanvasProps) {
             </div>
           )
         })}
+
+        {/* SVG grid lines — crisp 0.5px via pattern, always on top */}
+        {showGrid && (
+          <svg
+            className="absolute inset-0 pointer-events-none text-zinc-300 dark:text-zinc-700"
+            width="800"
+            height="450"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <defs>
+              <pattern
+                id="canvas-grid"
+                width="50"
+                height="50"
+                patternUnits="userSpaceOnUse"
+              >
+                {/* Top and left edges of each cell → forms full grid when tiled */}
+                <path
+                  d="M 50 0 L 0 0 L 0 50"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  shapeRendering="crispEdges"
+                />
+              </pattern>
+            </defs>
+            <rect width="800" height="450" fill="url(#canvas-grid)" />
+          </svg>
+        )}
       </div>
     </div>
   )

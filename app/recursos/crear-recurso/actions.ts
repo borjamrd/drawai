@@ -41,3 +41,45 @@ export async function createResource(formData: FormData) {
   revalidatePath('/recursos')
   redirect('/recursos')
 }
+
+export async function updateResource(id: string, label: string, description: string) {
+  const rawData = await fs.readFile(JSON_PATH, 'utf8')
+  const library: SvgAsset[] = JSON.parse(rawData)
+
+  const index = library.findIndex(a => a.id === id)
+  if (index === -1) throw new Error('Recurso no encontrado')
+
+  library[index] = {
+    ...library[index],
+    label,
+    description
+  }
+
+  await fs.writeFile(JSON_PATH, JSON.stringify(library, null, 2))
+  revalidatePath('/recursos')
+}
+
+export async function deleteResource(id: string) {
+  const rawData = await fs.readFile(JSON_PATH, 'utf8')
+  const library: SvgAsset[] = JSON.parse(rawData)
+
+  const index = library.findIndex(a => a.id === id)
+  if (index === -1) throw new Error('Recurso no encontrado')
+
+  const asset = library[index]
+  
+  // Remove from JSON
+  library.splice(index, 1)
+  await fs.writeFile(JSON_PATH, JSON.stringify(library, null, 2))
+
+  // Optionally delete the file
+  const fileName = path.basename(asset.svgPath)
+  const filePath = path.join(ASSETS_DIR, fileName)
+  try {
+    await fs.unlink(filePath)
+  } catch (e) {
+    console.error('Error deleting file:', e)
+  }
+
+  revalidatePath('/recursos')
+}
