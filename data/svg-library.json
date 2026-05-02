@@ -75,5 +75,68 @@
     "description": "A minimalist continuous-line illustration showing the outline map of Spain, including the Balearic and Canary Islands, rendered with a clean and professional stroke on a white background.",
     "svgPath": "/assets/mapa-de-espana.png",
     "default_width_pct": 20
+  },
+  {
+    "id": "maza-ceremonial",
+    "label": "maza-ceremonial",
+    "description": "A continuous-line drawing of a Spanish ceremonial parliamentary mace, featuring a decorative silver head with intricate royal filigree and a long polished handle, symbolizing legislative authority, rendered in a clean minimalist style.",
+    "svgPath": "/assets/maza-ceremonial.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "bocadillo-dialogo",
+    "label": "bocadillo-dialogo",
+    "description": "A set of three overlapping speech bubbles of varying sizes, rendered in a single fluid minimalist line, representing conversation and linguistic diversity.",
+    "svgPath": "/assets/bocadillo-dialogo.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "manos-unidas",
+    "label": "manos-unidas",
+    "description": "A minimalist continuous-line illustration showing two hands coming together in a firm, supportive clasp to symbolize solidarity and cooperation, simple and expressive strokes against a stark white background.",
+    "svgPath": "/assets/manos-unidas.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "eslabones-de-cadena",
+    "label": "eslabones-de-cadena",
+    "description": "A minimalist continuous-line drawing of several strong, interconnected steel chain links forming a circle to represent unity and strength, clean and elegant style on a white background.",
+    "svgPath": "/assets/eslabones-de-cadena.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "edificio-parlamentario",
+    "label": "edificio-parlamentario",
+    "description": "A minimalist continuous-line illustration of the Palacio de las Cortes in Madrid, featuring its neoclassical facade with six large Corinthian columns, a triangular pediment, and the two iconic bronze lions flanking the main entrance stairs, clean white background.",
+    "svgPath": "/assets/edificio-parlamentario.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "libro-gramatica",
+    "label": "libro-gramatica",
+    "description": "A minimalist continuous-line illustration of an open scholarly book with clean pages and a small bookmark, symbolizing the study and official grammar of a language, on a white background.",
+    "svgPath": "/assets/libro-gramatica.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "urna-electoral",
+    "label": "urna-electoral",
+    "description": "A minimalist continuous-line drawing of a modern transparent ballot box with a small slot on top, containing several envelopes, representing democratic voting and political pluralism.",
+    "svgPath": "/assets/urna-electoral.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "pluma-escribir",
+    "label": "pluma-escribir",
+    "description": "A classic quill pen standing in a simple inkwell, depicted with a single continuous line to represent the writing of laws and official documents.",
+    "svgPath": "/assets/pluma-escribir.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "pueblo-espanol",
+    "label": "pueblo-espanol",
+    "description": "A minimalist continuous-line illustration depicting a diverse group of Spanish people of different ages and backgrounds, standing together in a gesture of unity and citizenship, clean and professional strokes on a white background.",
+    "svgPath": "/assets/pueblo-espanol.png",
+    "default_width_pct": 20
   }
 ]

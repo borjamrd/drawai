@@ -1,5 +1,6 @@
 import { writeFileSync, readFileSync } from 'fs'
 import { join } from 'path'
+import sharp from 'sharp'
 import { generateImageOptionsFlow } from '@/lib/genkit/scene-flow'
 import type { SvgAsset } from '@/lib/svg-library'
 
@@ -30,8 +31,10 @@ export async function POST(request: Request) {
     const publicPath = join(process.cwd(), 'public', 'assets', fileName)
     const svgPath = `/assets/${fileName}`
 
-    // Save PNG to public/assets/
-    writeFileSync(publicPath, Buffer.from(base64Data, 'base64'))
+    // Remove white background → transparent, then save PNG
+    const rawBuffer = Buffer.from(base64Data, 'base64')
+    const transparentBuffer = await sharp(rawBuffer).unflatten().png().toBuffer()
+    writeFileSync(publicPath, transparentBuffer)
 
     // Append to svg-library.json (read → modify → write)
     const jsonPath = join(process.cwd(), 'data', 'svg-library.json')
