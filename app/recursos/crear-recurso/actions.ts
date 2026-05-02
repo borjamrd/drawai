@@ -13,16 +13,14 @@ export async function createResource(formData: FormData) {
   const id = formData.get('id') as string
   const label = formData.get('label') as string
   const description = formData.get('description') as string
-  const file = formData.get('file') as File
+  const svgCode = formData.get('svgCode') as string
 
-  if (!id || !label || !file) throw new Error('Campos incompletos')
+  if (!id || !label || !svgCode) throw new Error('Campos incompletos')
 
-  // 1. Save SVG file
-  const bytes = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
+  // 1. Save SVG file from string
   const fileName = `${id}.svg`
   const filePath = path.join(ASSETS_DIR, fileName)
-  await fs.writeFile(filePath, buffer)
+  await fs.writeFile(filePath, svgCode)
 
   // 2. Update JSON
   const rawData = await fs.readFile(JSON_PATH, 'utf8')
