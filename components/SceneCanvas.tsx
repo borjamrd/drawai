@@ -1,47 +1,59 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { motion, type TargetAndTransition } from 'framer-motion'
-import { RotateCcw } from 'lucide-react'
-import { SVG_LIBRARY_MAP } from '@/lib/svg-library-client'
-import type { Scene } from '@/lib/genkit/scene-flow'
+import { useEffect, useState } from "react";
+import { motion, type TargetAndTransition } from "framer-motion";
+import { RotateCcw } from "lucide-react";
+import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
+import type { Scene } from "@/lib/genkit/scene-flow";
 
-type EntryEffect = Scene['elements'][number]['entry_effect']
+type EntryEffect = Scene["elements"][number]["entry_effect"];
 
-const ENTRY_VARIANTS: Record<EntryEffect, { initial: TargetAndTransition; animate: TargetAndTransition }> = {
-  fade:        { initial: { opacity: 0 },              animate: { opacity: 1 } },
-  slide_left:  { initial: { opacity: 0, x: -60 },      animate: { opacity: 1, x: 0 } },
-  slide_right: { initial: { opacity: 0, x: 60 },       animate: { opacity: 1, x: 0 } },
-  slide_up:    { initial: { opacity: 0, y: 40 },       animate: { opacity: 1, y: 0 } },
-  zoom:        { initial: { opacity: 0, scale: 0.3 },  animate: { opacity: 1, scale: 1 } },
-  bounce:      { initial: { opacity: 0, y: -40 },      animate: { opacity: 1, y: 0 } },
-}
+const ENTRY_VARIANTS: Record<
+  EntryEffect,
+  { initial: TargetAndTransition; animate: TargetAndTransition }
+> = {
+  fade: { initial: { opacity: 0 }, animate: { opacity: 1 } },
+  slide_left: {
+    initial: { opacity: 0, x: -60 },
+    animate: { opacity: 1, x: 0 },
+  },
+  slide_right: {
+    initial: { opacity: 0, x: 60 },
+    animate: { opacity: 1, x: 0 },
+  },
+  slide_up: { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0 } },
+  zoom: {
+    initial: { opacity: 0, scale: 0.3 },
+    animate: { opacity: 1, scale: 1 },
+  },
+  bounce: { initial: { opacity: 0, y: -40 }, animate: { opacity: 1, y: 0 } },
+};
 
 // 800×450 canvas → 16 cols × 9 rows of 50px squares (exact fit)
-const GRID_COLS = 16
-const GRID_ROWS = 9
-const GRID_CELLS = GRID_COLS * GRID_ROWS
+const GRID_COLS = 16;
+const GRID_ROWS = 9;
+const GRID_CELLS = GRID_COLS * GRID_ROWS;
 
 interface SceneCanvasProps {
-  scene: Scene | null
-  showGrid?: boolean
+  scene: Scene | null;
+  showGrid?: boolean;
 }
 
 export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
-  const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set())
-  const [playKey, setPlayKey] = useState(0)
+  const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
+  const [playKey, setPlayKey] = useState(0);
 
   useEffect(() => {
-    setVisibleIndices(new Set())
-    if (!scene) return
+    setVisibleIndices(new Set());
+    if (!scene) return;
     const timers = scene.elements.map((el, i) =>
       setTimeout(
         () => setVisibleIndices((prev) => new Set([...prev, i])),
-        el.entry_time_ms
-      )
-    )
-    return () => timers.forEach(clearTimeout)
-  }, [scene, playKey])
+        el.entry_time_ms,
+      ),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [scene, playKey]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -54,7 +66,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
             <motion.button
               onClick={() => setPlayKey((k) => k + 1)}
               whileTap={{ scale: 0.96, y: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
               <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
@@ -63,7 +75,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
           </>
         ) : (
           <span className="text-xs text-zinc-400 dark:text-zinc-600 font-medium uppercase tracking-wider">
-            Lienzo vacío
+            Lienzo
           </span>
         )}
       </div>
@@ -74,7 +86,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
           <div
             className="absolute inset-0"
             style={{
-              display: 'grid',
+              display: "grid",
               gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
               gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
             }}
@@ -89,10 +101,10 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
         )}
 
         {scene?.elements.map((el, i) => {
-          if (!visibleIndices.has(i)) return null
-          const asset = SVG_LIBRARY_MAP[el.library_id]
-          if (!asset) return null
-          const variant = ENTRY_VARIANTS[el.entry_effect]
+          if (!visibleIndices.has(i)) return null;
+          const asset = SVG_LIBRARY_MAP[el.library_id];
+          if (!asset) return null;
+          const variant = ENTRY_VARIANTS[el.entry_effect];
 
           return (
             <div
@@ -102,22 +114,26 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
                 left: `${el.x}%`,
                 top: `${el.y}%`,
                 width: `${el.width_pct}%`,
-                transform: 'translate(-50%, -50%)',
+                transform: "translate(-50%, -50%)",
               }}
             >
               <motion.div
                 initial={variant.initial}
                 animate={variant.animate}
                 transition={
-                  el.entry_effect === 'bounce'
-                    ? { type: 'spring', stiffness: 300, damping: 10 }
-                    : { type: 'spring', stiffness: 100, damping: 20 }
+                  el.entry_effect === "bounce"
+                    ? { type: "spring", stiffness: 300, damping: 10 }
+                    : { type: "spring", stiffness: 100, damping: 20 }
                 }
               >
-                <img src={asset.svgPath} alt={asset.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <img
+                  src={asset.svgPath}
+                  alt={asset.label}
+                  style={{ width: "100%", height: "auto", display: "block" }}
+                />
               </motion.div>
             </div>
-          )
+          );
         })}
 
         {/* SVG grid lines — crisp 0.5px via pattern, always on top */}
@@ -151,5 +167,5 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
