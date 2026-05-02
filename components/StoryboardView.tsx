@@ -1,7 +1,8 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Layers } from 'lucide-react'
+import { CheckCircle, Eye, Layers } from 'lucide-react'
+import Link from 'next/link'
 import type { ScenePlan } from '@/lib/presentation'
 import { ScenePlanCard } from '@/components/ScenePlanCard'
 import { cn } from '@/lib/utils'
@@ -58,6 +59,7 @@ const cardVariants = {
 
 interface StoryboardViewProps {
   scenes: ScenePlan[]
+  presentationId?: string
   isLoading?: boolean
   skeletonCount?: number
   canConfirm?: boolean
@@ -71,6 +73,7 @@ interface StoryboardViewProps {
 
 export function StoryboardView({
   scenes,
+  presentationId,
   isLoading = false,
   skeletonCount = 3,
   canConfirm = false,
@@ -83,6 +86,7 @@ export function StoryboardView({
 }: StoryboardViewProps) {
   const hasGenerating = scenes.some((s) => s.status.startsWith('generating_'))
   const confirmEnabled = canConfirm && scenes.length > 0 && !hasGenerating
+  const allReady = scenes.length > 0 && scenes.every((s) => s.status === 'ready' && s.scene)
   const showHeader = isLoading || scenes.length > 0
 
   return (
@@ -116,6 +120,16 @@ export function StoryboardView({
               <CheckCircle className="h-3.5 w-3.5" strokeWidth={2} />
               Confirmar estructura
             </motion.button>
+          )}
+
+          {allReady && presentationId && (
+            <Link
+              href={`/storyboard/view?id=${presentationId}`}
+              className="flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2 text-xs font-medium text-white shadow-md transition-all hover:opacity-90 dark:bg-white dark:text-zinc-950"
+            >
+              <Eye className="h-3.5 w-3.5" strokeWidth={2} />
+              Ver storyboard
+            </Link>
           )}
         </div>
       )}

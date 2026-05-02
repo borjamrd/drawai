@@ -20,6 +20,10 @@ export function savePresentation(presentation: Presentation): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(others.slice(0, MAX_PRESENTATIONS)))
 }
 
+export function loadPresentation(id: string): Presentation | null {
+  return loadPresentations().find((p) => p.id === id) ?? null
+}
+
 export function deletePresentation(id: string): void {
   if (typeof window === 'undefined') return
   const presentations = loadPresentations().filter((p) => p.id !== id)

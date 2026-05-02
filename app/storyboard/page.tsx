@@ -294,6 +294,7 @@ export default function StoryboardPage() {
 
         <StoryboardView
           scenes={scenes}
+          presentationId={presentation?.id}
           isLoading={isLoading}
           skeletonCount={3}
           canConfirm={phase === 'structure'}
