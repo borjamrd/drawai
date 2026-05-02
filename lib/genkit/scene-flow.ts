@@ -114,34 +114,24 @@ Return ONLY the enriched prompt. One sentence. No explanation. No quotes.`,
   },
 );
 
-const ANGLE_HINTS = [
-  "front view, facing the viewer directly",
-  "three-quarter view, turned slightly to the right",
-  "side profile view, facing left",
-];
-
 const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. White background, no color.
 Pen contour lines only — minimalist ink sketch, sparse deliberate strokes.
 Realistic proportions, clearly recognizable subject.
 No shading, no gradients, no fills. Line art only.`;
 
 export async function generateImageOptionsFlow(prompt: string): Promise<string[]> {
-  const results = await Promise.all(
-    ANGLE_HINTS.map(async (angleHint) => {
-      const fullPrompt = `${IMAGE_STYLE_PROMPT}\nSubject: ${prompt}. Perspective: ${angleHint}.`;
-      const response = await genai.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
-        contents: fullPrompt,
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parts: any[] = response.candidates?.[0]?.content?.parts ?? [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const imagePart = parts.find((p: any) => p.inlineData);
-      if (!imagePart?.inlineData?.data) {
-        throw new Error(`No image returned for angle: ${angleHint}`);
-      }
-      return imagePart.inlineData.data as string;
-    })
-  );
-  return results;
+  const fullPrompt = `${IMAGE_STYLE_PROMPT}\nSubject: ${prompt}.`;
+  const response = await genai.models.generateContent({
+    model: "gemini-3.1-flash-image-preview",
+    contents: fullPrompt,
+    config: { responseModalities: ["IMAGE"] },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parts: any[] = response.candidates?.[0]?.content?.parts ?? [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const imagePart = parts.find((p: any) => p.inlineData);
+  if (!imagePart?.inlineData?.data) {
+    throw new Error("No image returned from model");
+  }
+  return [imagePart.inlineData.data as string];
 }
