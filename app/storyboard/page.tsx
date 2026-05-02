@@ -6,9 +6,9 @@ import { Layers } from 'lucide-react'
 import { StoryboardView } from '@/components/StoryboardView'
 import type { Presentation, ScenePlan } from '@/lib/presentation'
 import { loadPresentations, savePresentation } from '@/lib/presentation-storage'
-import type { PresentationPlan } from '@/lib/genkit/scene-flow'
+import type { PresentationPlan, Scene } from '@/lib/genkit/scene-flow'
 
-type Phase = 'idle' | 'structure'
+type Phase = 'idle' | 'structure' | 'generating'
 
 export default function StoryboardPage() {
   const [presentation, setPresentation] = useState<Presentation | null>(() => {
@@ -25,6 +25,27 @@ export default function StoryboardPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // ─── helpers ──────────────────────────────────────────────────────────────
+
+  function patchScene(index: number, patch: Partial<ScenePlan>, pres: Presentation): Presentation {
+    return {
+      ...pres,
+      scenes: pres.scenes.map((s, i) => (i === index ? { ...s, ...patch } : s)),
+      updatedAt: Date.now(),
+    }
+  }
+
+  function applyAndSave(updater: (prev: Presentation) => Presentation) {
+    setPresentation((prev) => {
+      if (!prev) return prev
+      const next = updater(prev)
+      savePresentation(next)
+      return next
+    })
+  }
+
+  // ─── phase 1: generate structure ──────────────────────────────────────────
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -70,32 +91,101 @@ export default function StoryboardPage() {
     }
   }
 
-  function updatePresentation(updated: Presentation) {
-    setPresentation(updated)
-    savePresentation(updated)
-  }
+  // ─── level 1 editing ──────────────────────────────────────────────────────
 
   function handleUpdateScene(index: number, changes: Pick<ScenePlan, 'title' | 'key_concepts'>) {
-    if (!presentation) return
-    updatePresentation({
-      ...presentation,
-      scenes: presentation.scenes.map((s, i) => (i === index ? { ...s, ...changes } : s)),
-      updatedAt: Date.now(),
-    })
+    applyAndSave((prev) => patchScene(index, changes, prev))
   }
 
   function handleMoveScene(fromIndex: number, toIndex: number) {
-    if (!presentation) return
-    const scenes = [...presentation.scenes]
-    const [moved] = scenes.splice(fromIndex, 1)
-    scenes.splice(toIndex, 0, moved)
-    updatePresentation({ ...presentation, scenes, updatedAt: Date.now() })
+    applyAndSave((prev) => {
+      const scenes = [...prev.scenes]
+      const [moved] = scenes.splice(fromIndex, 1)
+      scenes.splice(toIndex, 0, moved)
+      return { ...prev, scenes, updatedAt: Date.now() }
+    })
   }
 
-  function handleConfirm() {
-    // Fase 3: trigger generateVisualDescriptionFlow per scene
-    console.log('Estructura confirmada — Fase 3 lanzará la generación de descripciones visuales')
+  // ─── phase 2: confirm + generate all scenes in parallel ───────────────────
+
+  async function handleConfirm() {
+    if (!presentation) return
+
+    // Snapshot scenes before async work
+    const scenesSnapshot = presentation.scenes
+
+    // Mark all as generating_description
+    applyAndSave((prev) => ({
+      ...prev,
+      scenes: prev.scenes.map((s) => ({ ...s, status: 'generating_description' as const })),
+      updatedAt: Date.now(),
+    }))
+    setPhase('generating')
+
+    // Launch all pipelines independently in parallel
+    scenesSnapshot.forEach((scenePlan, i) => runScenePipeline(scenePlan, i))
   }
+
+  async function runScenePipeline(scenePlan: ScenePlan, index: number) {
+    try {
+      // Step 1: generate visual description
+      const descRes = await fetch('/api/generate-visual-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: scenePlan.title,
+          excerpt: scenePlan.excerpt,
+          key_concepts: scenePlan.key_concepts,
+        }),
+      })
+      if (!descRes.ok) throw new Error('description')
+      const { visual_description } = (await descRes.json()) as { visual_description: string }
+
+      applyAndSave((prev) =>
+        patchScene(index, { status: 'generating_scene', visual_description }, prev),
+      )
+
+      // Step 2: generate scene elements
+      const sceneRes = await fetch('/api/generate-scene', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: visual_description }),
+      })
+      if (!sceneRes.ok) throw new Error('scene')
+      const scene = (await sceneRes.json()) as Scene
+
+      applyAndSave((prev) => patchScene(index, { status: 'ready', scene }, prev))
+    } catch {
+      applyAndSave((prev) =>
+        patchScene(index, { status: 'error', error_message: 'Generación fallida' }, prev),
+      )
+    }
+  }
+
+  // ─── level 2: regenerate individual scene ─────────────────────────────────
+
+  async function handleRegenerateScene(index: number, visualDescription: string) {
+    applyAndSave((prev) =>
+      patchScene(index, { status: 'generating_scene', visual_description: visualDescription }, prev),
+    )
+
+    try {
+      const res = await fetch('/api/generate-scene', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: visualDescription }),
+      })
+      if (!res.ok) throw new Error('scene')
+      const scene = (await res.json()) as Scene
+      applyAndSave((prev) => patchScene(index, { status: 'ready', scene }, prev))
+    } catch {
+      applyAndSave((prev) =>
+        patchScene(index, { status: 'error', error_message: 'Regeneración fallida' }, prev),
+      )
+    }
+  }
+
+  // ─── render ───────────────────────────────────────────────────────────────
 
   const scenes = presentation?.scenes ?? []
 
@@ -146,12 +236,10 @@ export default function StoryboardPage() {
           </div>
         </form>
 
-        {presentation?.title && phase === 'structure' && (
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
-              {presentation.title}
-            </h2>
-          </div>
+        {presentation?.title && phase !== 'idle' && (
+          <h2 className="text-sm font-medium tracking-tight text-zinc-700 dark:text-zinc-300">
+            {presentation.title}
+          </h2>
         )}
 
         <StoryboardView
@@ -163,6 +251,7 @@ export default function StoryboardPage() {
           onConfirm={handleConfirm}
           onUpdateScene={handleUpdateScene}
           onMoveScene={handleMoveScene}
+          onRegenerateScene={handleRegenerateScene}
         />
       </div>
     </div>

@@ -2,8 +2,10 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { AlertCircle, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { AlertCircle, ChevronLeft, ChevronRight, Plus, RefreshCcw, X } from 'lucide-react'
+import { SceneCanvas } from '@/components/SceneCanvas'
 import type { ScenePlan, ScenePlanStatus } from '@/lib/presentation'
+import type { Scene } from '@/lib/genkit/scene-flow'
 import { cn } from '@/lib/utils'
 
 const STATUS_LABELS: Record<ScenePlanStatus, string> = {
@@ -14,6 +16,30 @@ const STATUS_LABELS: Record<ScenePlanStatus, string> = {
   generating_scene: 'Generando escena...',
   ready: 'Lista',
   error: 'Error',
+}
+
+const MINI_SCALE = 260 / 800
+const MINI_H = Math.round(450 * MINI_SCALE) // 146px
+
+function MiniScenePreview({ scene }: { scene: Scene }) {
+  return (
+    <div
+      className="overflow-hidden rounded-lg"
+      style={{ width: 260, height: MINI_H }}
+    >
+      <div
+        style={{
+          transform: `scale(${MINI_SCALE})`,
+          transformOrigin: 'top left',
+          width: 800,
+          height: 450,
+          pointerEvents: 'none',
+        }}
+      >
+        <SceneCanvas scene={scene} compact />
+      </div>
+    </div>
+  )
 }
 
 function StatusDot({ status }: { status: ScenePlanStatus }) {
@@ -49,6 +75,7 @@ interface ScenePlanCardProps {
   onUpdate?: (changes: Pick<ScenePlan, 'title' | 'key_concepts'>) => void
   onMoveLeft?: () => void
   onMoveRight?: () => void
+  onRegenerate?: (visualDescription: string) => void
 }
 
 export function ScenePlanCard({
@@ -59,11 +86,14 @@ export function ScenePlanCard({
   onUpdate,
   onMoveLeft,
   onMoveRight,
+  onRegenerate,
 }: ScenePlanCardProps) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(plan.title)
   const [addingConcept, setAddingConcept] = useState(false)
   const [draftConcept, setDraftConcept] = useState('')
+  // draftVisualDesc initializes from prop; StoryboardView resets this card via key when status changes
+  const [draftVisualDesc, setDraftVisualDesc] = useState(plan.visual_description ?? '')
   const conceptInputRef = useRef<HTMLInputElement>(null)
   const sceneNumber = String(index + 1).padStart(2, '0')
 
@@ -92,6 +122,10 @@ export function ScenePlanCard({
     setDraftConcept('')
     setAddingConcept(false)
   }
+
+  const isGenerating = plan.status.startsWith('generating_')
+  const showLevel2 =
+    (plan.status === 'ready' || plan.status === 'error') && plan.visual_description !== undefined
 
   return (
     <motion.article
@@ -149,80 +183,109 @@ export function ScenePlanCard({
           onClick={() => canEdit && setEditingTitle(true)}
           className={cn(
             '-mx-1 rounded px-1 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100',
-            canEdit &&
-              'cursor-text transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800',
+            canEdit && 'cursor-text transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800',
           )}
         >
           {plan.title}
         </h3>
       )}
 
-      {/* Excerpt */}
-      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400 line-clamp-3">
-        {plan.excerpt}
-      </p>
+      {/* Excerpt — shown when not yet ready */}
+      {!plan.scene && (
+        <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400 line-clamp-3">
+          {plan.excerpt}
+        </p>
+      )}
 
-      {/* Key concepts */}
-      <div className="flex flex-wrap gap-1.5">
-        {plan.key_concepts.map((concept) => (
-          <span
-            key={concept}
-            className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-          >
-            {concept}
-            {canEdit && (
+      {/* Key concepts — shown during structure editing */}
+      {canEdit && (
+        <div className="flex flex-wrap gap-1.5">
+          {plan.key_concepts.map((concept) => (
+            <span
+              key={concept}
+              className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+            >
+              {concept}
               <button
                 onClick={() => removeConcept(concept)}
                 className="text-zinc-400 transition-colors hover:text-zinc-700 dark:hover:text-zinc-200"
               >
                 <X className="h-2.5 w-2.5" strokeWidth={2.5} />
               </button>
-            )}
-          </span>
-        ))}
+            </span>
+          ))}
+          {!addingConcept && plan.key_concepts.length < 4 && (
+            <button
+              onClick={() => {
+                setAddingConcept(true)
+                setTimeout(() => conceptInputRef.current?.focus(), 0)
+              }}
+              className="inline-flex items-center gap-1 rounded-md border border-dashed border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-400 transition-colors hover:text-zinc-600 dark:border-zinc-700 dark:hover:text-zinc-300"
+            >
+              <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              Añadir
+            </button>
+          )}
+          {addingConcept && (
+            <input
+              ref={conceptInputRef}
+              autoFocus
+              value={draftConcept}
+              onChange={(e) => setDraftConcept(e.target.value)}
+              onBlur={commitConcept}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                  e.preventDefault()
+                  commitConcept()
+                }
+                if (e.key === 'Escape') {
+                  setDraftConcept('')
+                  setAddingConcept(false)
+                }
+              }}
+              placeholder="concepto..."
+              className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:ring-zinc-600"
+            />
+          )}
+        </div>
+      )}
 
-        {canEdit && !addingConcept && plan.key_concepts.length < 4 && (
-          <button
-            onClick={() => {
-              setAddingConcept(true)
-              setTimeout(() => conceptInputRef.current?.focus(), 0)
-            }}
-            className="inline-flex items-center gap-1 rounded-md border border-dashed border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-400 transition-colors hover:text-zinc-600 dark:border-zinc-700 dark:hover:text-zinc-300"
-          >
-            <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
-            Añadir
-          </button>
-        )}
-
-        {canEdit && addingConcept && (
-          <input
-            ref={conceptInputRef}
-            autoFocus
-            value={draftConcept}
-            onChange={(e) => setDraftConcept(e.target.value)}
-            onBlur={commitConcept}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === 'Tab') {
-                e.preventDefault()
-                commitConcept()
-              }
-              if (e.key === 'Escape') {
-                setDraftConcept('')
-                setAddingConcept(false)
-              }
-            }}
-            placeholder="concepto..."
-            className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:ring-zinc-600"
-          />
-        )}
-      </div>
-
-      {/* Visual description preview — populated in Fase 3 */}
-      {plan.visual_description && (
+      {/* Generating: show visual description with pulse */}
+      {isGenerating && plan.visual_description && (
         <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-800/40">
           <p className="line-clamp-2 text-[11px] italic leading-relaxed text-zinc-500 dark:text-zinc-400">
             {plan.visual_description}
           </p>
+        </div>
+      )}
+
+      {/* Mini preview — shown when ready */}
+      {plan.status === 'ready' && plan.scene && (
+        <MiniScenePreview scene={plan.scene} />
+      )}
+
+      {/* Level 2: visual description editor + regenerate */}
+      {showLevel2 && (
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
+            Descripción visual
+          </label>
+          <textarea
+            value={draftVisualDesc}
+            onChange={(e) => setDraftVisualDesc(e.target.value)}
+            rows={3}
+            className="w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-[11px] leading-relaxed text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400 dark:focus:ring-zinc-600"
+          />
+          <motion.button
+            onClick={() => onRegenerate?.(draftVisualDesc)}
+            disabled={!draftVisualDesc.trim() || isGenerating}
+            whileTap={{ scale: 0.97, y: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-200 px-3 py-1.5 text-[11px] font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+          >
+            <RefreshCcw className="h-3 w-3" strokeWidth={2} />
+            Regenerar escena
+          </motion.button>
         </div>
       )}
 

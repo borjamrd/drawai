@@ -65,6 +65,7 @@ interface StoryboardViewProps {
   onConfirm?: () => void
   onUpdateScene?: (index: number, changes: Pick<ScenePlan, 'title' | 'key_concepts'>) => void
   onMoveScene?: (fromIndex: number, toIndex: number) => void
+  onRegenerateScene?: (index: number, visualDescription: string) => void
 }
 
 export function StoryboardView({
@@ -76,6 +77,7 @@ export function StoryboardView({
   onConfirm,
   onUpdateScene,
   onMoveScene,
+  onRegenerateScene,
 }: StoryboardViewProps) {
   const hasGenerating = scenes.some((s) => s.status.startsWith('generating_'))
   const confirmEnabled = canConfirm && scenes.length > 0 && !hasGenerating
@@ -136,7 +138,7 @@ export function StoryboardView({
               animate="visible"
             >
               {scenes.map((scene, i) => (
-                <motion.div key={scene.id} variants={cardVariants}>
+                <motion.div key={`${scene.id}-${scene.status}`} variants={cardVariants}>
                   <ScenePlanCard
                     plan={scene}
                     index={i}
@@ -145,6 +147,7 @@ export function StoryboardView({
                     onUpdate={(changes) => onUpdateScene?.(i, changes)}
                     onMoveLeft={() => onMoveScene?.(i, i - 1)}
                     onMoveRight={() => onMoveScene?.(i, i + 1)}
+                    onRegenerate={(vd) => onRegenerateScene?.(i, vd)}
                   />
                 </motion.div>
               ))}

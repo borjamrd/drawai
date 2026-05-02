@@ -37,14 +37,14 @@ const GRID_CELLS = GRID_COLS * GRID_ROWS;
 interface SceneCanvasProps {
   scene: Scene | null;
   showGrid?: boolean;
+  compact?: boolean;
 }
 
-export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
+export function SceneCanvas({ scene, showGrid = false, compact = false }: SceneCanvasProps) {
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
   const [playKey, setPlayKey] = useState(0);
 
   useEffect(() => {
-    setVisibleIndices(new Set());
     if (!scene) return;
     const timers = scene.elements.map((el, i) =>
       setTimeout(
@@ -52,12 +52,15 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
         el.entry_time_ms,
       ),
     );
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      setVisibleIndices(new Set());
+    };
   }, [scene, playKey]);
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between min-h-[36px]">
+      {!compact && <div className="flex items-center justify-between min-h-[36px]">
         {scene ? (
           <>
             <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 tracking-tight">
@@ -78,7 +81,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
             Lienzo
           </span>
         )}
-      </div>
+      </div>}
 
       <div className="relative w-[800px] h-[450px] bg-white border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
         {/* Hover cells — rendered below scene elements */}
