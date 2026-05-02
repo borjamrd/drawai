@@ -1,38 +1,38 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Grid3X3 } from 'lucide-react'
-import { SceneCanvas } from '@/components/SceneCanvas'
-import type { Scene } from '@/lib/genkit/scene-flow'
-import { cn } from '@/lib/utils'
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Grid3X3 } from "lucide-react";
+import { SceneCanvas } from "@/components/SceneCanvas";
+import type { Scene } from "@/lib/genkit/scene-flow";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const [prompt, setPrompt] = useState('')
-  const [scene, setScene] = useState<Scene | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showGrid, setShowGrid] = useState(false)
+  const [prompt, setPrompt] = useState("");
+  const [scene, setScene] = useState<Scene | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showGrid, setShowGrid] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!prompt.trim()) return
-    setIsLoading(true)
-    setError(null)
-    setScene(null)
+    e.preventDefault();
+    if (!prompt.trim()) return;
+    setIsLoading(true);
+    setError(null);
+    setScene(null);
     try {
-      const res = await fetch('/api/generate-scene', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/generate-scene", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data: Scene = await res.json()
-      setScene(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: Scene = await res.json();
+      setScene(data);
     } catch {
-      setError('Algo salió mal, inténtalo de nuevo.')
+      setError("Algo salió mal, inténtalo de nuevo.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -45,7 +45,8 @@ export default function Home() {
             Generador de Escenas
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Describe una escena y la IA la animará con los elementos de tu biblioteca.
+            Describe una escena y la IA la animará con los elementos de tu
+            biblioteca.
           </p>
         </div>
 
@@ -57,7 +58,7 @@ export default function Home() {
             className="w-full h-24 resize-none rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all shadow-sm group-hover:shadow-md"
             disabled={isLoading}
           />
-          
+
           <div className="absolute right-3 bottom-3 flex items-center gap-3">
             {error && (
               <p className="text-xs text-red-600 dark:text-red-400 font-medium animate-in fade-in slide-in-from-right-2">
@@ -75,7 +76,7 @@ export default function Home() {
               ) : (
                 <ArrowRight className="h-4 w-4" />
               )}
-              {isLoading ? 'Generando…' : 'Generar'}
+              {isLoading ? "Generando…" : "Generar"}
             </motion.button>
           </div>
         </form>
@@ -109,7 +110,7 @@ export default function Home() {
                 key="canvas"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+                transition={{ type: "spring", stiffness: 100, damping: 20 }}
               >
                 <SceneCanvas scene={scene} showGrid={showGrid} />
               </motion.div>
@@ -131,27 +132,23 @@ export default function Home() {
                 "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-medium border transition-all duration-200",
                 showGrid
                   ? "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-transparent shadow-md"
-                  : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
+                  : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600",
               )}
             >
               <div className="flex items-center gap-2.5">
                 <Grid3X3 className="h-4 w-4" strokeWidth={showGrid ? 2 : 1.5} />
                 <span>Cuadrícula</span>
               </div>
-              <div className={cn(
-                "h-1.5 w-1.5 rounded-full transition-colors",
-                showGrid ? "bg-emerald-400" : "bg-zinc-200 dark:bg-zinc-700"
-              )} />
+              <div
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full transition-colors",
+                  showGrid ? "bg-emerald-400" : "bg-zinc-200 dark:bg-zinc-700",
+                )}
+              />
             </motion.button>
-          </div>
-
-          <div className="mt-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/60">
-            <p className="text-[10px] leading-relaxed text-zinc-400 dark:text-zinc-500">
-              Usa la cuadrícula para alinear los elementos de tu biblioteca con precisión.
-            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

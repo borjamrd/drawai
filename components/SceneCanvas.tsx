@@ -101,7 +101,8 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
               style={{
                 left: `${el.x}%`,
                 top: `${el.y}%`,
-                transform: `translate(-50%, -50%) scale(${el.scale})`,
+                width: `${el.width_pct}%`,
+                transform: 'translate(-50%, -50%)',
               }}
             >
               <motion.div
@@ -113,7 +114,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
                     : { type: 'spring', stiffness: 100, damping: 20 }
                 }
               >
-                <img src={asset.svgPath} alt={asset.label} className="w-16 h-16" />
+                <img src={asset.svgPath} alt={asset.label} style={{ width: '100%', height: 'auto', display: 'block' }} />
               </motion.div>
             </div>
           )

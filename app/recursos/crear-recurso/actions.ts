@@ -32,7 +32,8 @@ export async function createResource(formData: FormData) {
     id,
     label,
     description,
-    svgPath: `/assets/${fileName}`
+    svgPath: `/assets/${fileName}`,
+    default_width_pct: 20
   }
 
   library.push(newAsset)

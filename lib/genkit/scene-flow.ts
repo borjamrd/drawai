@@ -28,10 +28,11 @@ export const SceneElementSchema = z.object({
     .describe(
       "Vertical position as percentage of canvas height (0=top, 100=bottom)",
     ),
-  scale: z
+  width_pct: z
     .number()
-    .positive()
-    .describe("Size multiplier: 1.0 = normal, 0.5 = half, 1.5 = larger"),
+    .min(5)
+    .max(100)
+    .describe("Percentage of canvas width (800px) this asset should occupy (5–100)"),
   entry_time_ms: z
     .number()
     .nonnegative()
@@ -56,7 +57,7 @@ export type Scene = z.infer<typeof SceneSchema>;
 
 function buildSystemPrompt(): string {
   const assetList = getSvgLibrary()
-    .map((a) => `- ${a.id}: ${a.description}`)
+    .map((a) => `- ${a.id} (default coverage: ${a.default_width_pct}%): ${a.description}`)
     .join("\n");
   return `You are a scene director for animated educational videos.
 
@@ -68,7 +69,12 @@ ${assetList}
 PLACEMENT RULES:
 - x and y are percentages (0-100). Spread elements across the canvas. Avoid overlaps (keep at least 15 units apart).
 - Typical positions: left side (x:15-25), center (x:45-55), right side (x:70-80). Top (y:20-35), middle (y:45-55), bottom (y:65-80).
-- scale: 1.0 normal, 0.7-0.9 smaller/background, 1.2-1.4 emphasized/foreground.
+- width_pct: percentage of the 800px canvas width the asset should visually cover.
+  Use the asset's default coverage as a baseline. Adjust based on user intent:
+  background/map filling canvas: 60–90%; prominent figure: 15–25%; small prop: 5–12%.
+  If the user says "ocupe el 50%" or "casi todo el lienzo", translate that directly to width_pct.
+- Layer order: elements are rendered in array order — first element = bottom layer, last = top layer.
+  Place background assets first, foreground figures last.
 
 TIMING RULES:
 - First element: entry_time_ms = 0.

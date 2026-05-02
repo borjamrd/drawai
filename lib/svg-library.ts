@@ -6,6 +6,7 @@ export type SvgAsset = {
   label: string
   description: string
   svgPath: string
+  default_width_pct: number
 }
 
 const JSON_PATH = path.join(process.cwd(), 'data', 'svg-library.json')
