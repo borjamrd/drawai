@@ -17,6 +17,29 @@ function isPromptPoor(text: string): boolean {
   return !hasContext && !hasAdjective
 }
 
+const STOP_WORDS = ['de pie', 'sentado', 'sosteniendo', 'mirando', ' en ', ' de ', ' con ', ' sin ', ' sobre ', ' por ', ' para ', ' junto']
+
+function suggestName(prompt: string): string {
+  const lower = prompt.toLowerCase()
+  let cut = prompt.length
+  for (const w of STOP_WORDS) {
+    const idx = lower.indexOf(w)
+    if (idx > 0 && idx < cut) cut = idx
+  }
+  const raw = prompt.slice(0, cut).trim()
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
+
+function nameToSlug(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{Mn}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+}
+
 export default function CrearRecursoPage() {
   const [prompt, setPrompt] = useState('')
   const [options, setOptions] = useState<string[]>([])
@@ -25,6 +48,10 @@ export default function CrearRecursoPage() {
   const [error, setError] = useState<string | null>(null)
   const [suggestedPrompt, setSuggestedPrompt] = useState<string | null>(null)
   const [enriching, setEnriching] = useState(false)
+  const [nameValue, setNameValue] = useState('')
+  const [descValue, setDescValue] = useState('')
+
+  const slug = nameToSlug(nameValue)
 
   const runGeneration = async (finalPrompt: string) => {
     setSuggestedPrompt(null)
@@ -32,6 +59,8 @@ export default function CrearRecursoPage() {
     setError(null)
     setOptions([])
     setSelectedSvg(null)
+    setNameValue('')
+    setDescValue('')
     try {
       const res = await fetch('/api/generate-asset', {
         method: 'POST',
@@ -201,50 +230,57 @@ export default function CrearRecursoPage() {
               className="flex flex-col gap-5 pt-2 border-t border-zinc-100 dark:border-zinc-800"
             >
               <input type="hidden" name="imageData" value={selectedSvg ?? ''} />
+              <input type="hidden" name="id" value={slug} />
 
               <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                 Metadatos
               </p>
 
-              {[
-                { name: 'id', label: 'Identificador', placeholder: 'ej: soldier_standing', hint: 'Snake_case, único.' },
-                { name: 'label', label: 'Nombre', placeholder: 'ej: Soldado Colonial', hint: null },
-                { name: 'description', label: 'Descripción', placeholder: 'Describe el activo para que la IA entienda cuándo usarlo.', hint: null, multiline: true },
-              ].map((field) => (
-                <div key={field.name} className="flex flex-col gap-2">
-                  <label htmlFor={field.name} className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    {field.label}
-                  </label>
-                  {field.multiline ? (
-                    <textarea
-                      id={field.name}
-                      name={field.name}
-                      required
-                      placeholder={field.placeholder}
-                      rows={3}
-                      className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
-                    />
-                  ) : (
-                    <input
-                      id={field.name}
-                      name={field.name}
-                      type="text"
-                      required
-                      placeholder={field.placeholder}
-                      className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
-                    />
-                  )}
-                  {field.hint && (
-                    <p className="text-xs text-zinc-400 dark:text-zinc-500">{field.hint}</p>
-                  )}
-                </div>
-              ))}
+              {/* Name */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="label" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Nombre
+                </label>
+                <input
+                  id="label"
+                  name="label"
+                  type="text"
+                  required
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  placeholder="ej: Soldado Colonial"
+                  className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
+                />
+                {slug && (
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono">
+                    slug: {slug}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="flex flex-col gap-2">
+                <label htmlFor="description" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Descripción
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  required
+                  value={descValue}
+                  onChange={(e) => setDescValue(e.target.value)}
+                  placeholder="Describe el activo para que la IA entienda cuándo usarlo."
+                  rows={3}
+                  className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
+                />
+              </div>
 
               <motion.button
                 type="submit"
+                disabled={!slug || !nameValue.trim() || !descValue.trim()}
                 whileTap={{ scale: 0.97, y: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="flex items-center gap-2 self-start rounded-lg bg-zinc-950 dark:bg-white px-5 py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition-opacity hover:opacity-80"
+                className="flex items-center gap-2 self-start rounded-lg bg-zinc-950 dark:bg-white px-5 py-2.5 text-sm font-medium text-white dark:text-zinc-950 disabled:opacity-40 transition-opacity hover:opacity-80"
               >
                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
                 Guardar recurso
@@ -291,7 +327,12 @@ export default function CrearRecursoPage() {
                   <motion.button
                     key={i}
                     type="button"
-                    onClick={() => setSelectedSvg(svg)}
+                    onClick={() => {
+                      setSelectedSvg(svg)
+                      const activePrompt = suggestedPrompt ?? prompt
+                      setNameValue(suggestName(activePrompt))
+                      setDescValue(activePrompt.charAt(0).toUpperCase() + activePrompt.slice(1))
+                    }}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 100, damping: 20, delay: i * 0.07 }}

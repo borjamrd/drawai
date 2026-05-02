@@ -40,5 +40,23 @@
     "label": "soldado español",
     "description": "Soldado español",
     "svgPath": "/assets/soldado-español.png"
+  },
+  {
+    "id": "indigena mexicano",
+    "label": "indigena-mexicano",
+    "description": "un indigena mexicano en época de la conquista de américa con atuendos de la época",
+    "svgPath": "/assets/indigena mexicano.png"
+  },
+  {
+    "id": "un-soldado-espanol-del-siglo-xv",
+    "label": "Un soldado español del siglo XV",
+    "description": "Un soldado español del siglo XV con ropa y atuendos de la epoca de la conquista de america",
+    "svgPath": "/assets/un-soldado-espanol-del-siglo-xv.png"
+  },
+  {
+    "id": "mapa",
+    "label": "Mapa",
+    "description": "Mapa en blanco de america",
+    "svgPath": "/assets/mapa.png"
   }
 ]
