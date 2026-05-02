@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, type TargetAndTransition } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { SVG_LIBRARY_MAP } from '@/lib/svg-library'
+import { SVG_LIBRARY_MAP } from '@/lib/svg-library-client'
 import type { Scene } from '@/lib/genkit/scene-flow'
 
 type EntryEffect = Scene['elements'][number]['entry_effect']

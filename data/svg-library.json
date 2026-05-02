@@ -28,5 +28,11 @@
     "label": "Flecha Direccional",
     "description": "A bold arrow indicating movement or direction",
     "svgPath": "/assets/directional_arrow.svg"
+  },
+  {
+    "id": "arrow-right",
+    "label": "arrow-right",
+    "description": "es una flecha apuntando hacia la derecha",
+    "svgPath": "/assets/arrow-right.svg"
   }
 ]
