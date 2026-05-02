@@ -404,7 +404,7 @@ export default function CrearRecursoPage() {
               <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                 Haz click en la imagen para aceptarla
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="">
                 {options.map((svg, i) => (
                   <motion.button
                     key={i}

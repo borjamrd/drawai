@@ -61,5 +61,12 @@
     "description": "A continuous and fluid single-line illustration of a majestic golden imperial crown adorned with a central cross and intricate filigree, resting elegantly upon a plush, tasseled ceremonial velvet cushion within a minimalist and airy royal chamber setting.",
     "svgPath": "/assets/corona.png",
     "default_width_pct": 20
+  },
+  {
+    "id": "majestic-15th-century-spanish",
+    "label": "caravel",
+    "description": "A majestic 15th-century Spanish caravel in profile view, featuring three tall masts with billowing square sails adorned with the red Cross of Burgundy, a high-walled wooden stern castle, detailed rigging lines, and minimalist cresting ocean waves at its base, rendered in an elegant thinking line style.",
+    "svgPath": "/assets/majestic-15th-century-spanish.png",
+    "default_width_pct": 20
   }
 ]
