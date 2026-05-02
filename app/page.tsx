@@ -31,13 +31,15 @@ export default function Home() {
       const imagePromises = scene.elements.map(async (el) => {
         const asset = SVG_LIBRARY_MAP[el.library_id];
         if (!asset) return null;
-        return new Promise<{ img: HTMLImageElement; el: typeof el }>((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () => resolve({ img, el });
-          img.onerror = reject;
-          img.src = asset.svgPath;
-        });
+        return new Promise<{ img: HTMLImageElement; el: typeof el }>(
+          (resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve({ img, el });
+            img.onerror = reject;
+            img.src = asset.svgPath;
+          },
+        );
       });
 
       const loaded = (await Promise.all(imagePromises)).filter(
@@ -172,7 +174,8 @@ export default function Home() {
         }>((resolve, reject) => {
           const img = new Image();
           img.crossOrigin = "anonymous";
-          img.onload = () => resolve({ img, x: el.x, y: el.y, width_pct: el.width_pct });
+          img.onload = () =>
+            resolve({ img, x: el.x, y: el.y, width_pct: el.width_pct });
           img.onerror = reject;
           img.src = asset.svgPath;
         });
@@ -244,7 +247,7 @@ export default function Home() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ej: Un soldado colonial llega al territorio, coloca un mapa en el centro y una flecha señala el norte…"
+            placeholder="Ej: Muestra un mapa en el centro que ocupe el 44% del canvas. Al segundo, aparece un indígena en el lado izquierdo. Luego aparece un soldado español en el lado derecho"
             className="w-full h-24 resize-none rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all shadow-sm group-hover:shadow-md"
             disabled={isLoading}
           />

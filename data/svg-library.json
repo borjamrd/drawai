@@ -19,5 +19,47 @@
     "description": "A continuous and expressive thinking line depicting the complete silhouette of the Americas from the Arctic north to the tip of Patagonia, featuring the textured ridges of the Andes and Rocky Mountains, accented by a classic nautical compass rose and subtle flowing strokes representing the surrounding oceanic currents.",
     "svgPath": "/assets/continuous-and-expressive.png",
     "default_width_pct": 55
+  },
+  {
+    "id": "single-ripe-banana",
+    "label": "Banana",
+    "description": "A single ripe banana rendered in a minimalist continuous line, positioned at a graceful curve with one strip of its peel curling downwards to reveal the smooth fruit inside, featuring a tiny stem at the top and delicate line-work to suggest depth against a stark white background.",
+    "svgPath": "/assets/single-ripe-banana.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "majestic-personification-liberty",
+    "label": "libertad",
+    "description": "A majestic personification of liberty stands in a profile pose atop a rocky summit, wearing flowing Grecian robes and a Phrygian cap with her hair streaming in the wind, triumphantly hoisting a flaming torch while clutching a set of shattered iron chains as the sun rises behind her.",
+    "svgPath": "/assets/majestic-personification-liberty.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "dignified-female-figure",
+    "label": "justicia",
+    "description": "A dignified female figure of Lady Justice stands in a stoic front-facing pose, wearing a classical flowing Roman stola and a simple fabric blindfold over her eyes, holding a pair of perfectly leveled scales in her outstretched left hand and a vertical double-edged sword in her right, all rendered in a minimalist continuous-line composition that emphasizes balance and impartiality.",
+    "svgPath": "/assets/dignified-female-figure.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "thick-leather-bound-legal",
+    "label": "derecho",
+    "description": "A thick, leather-bound legal tome with a gold-embossed scale of justice on its spine sits slightly open on a polished mahogany desk next to a classic judge's gavel, depicted in a continuous, flowing minimalist line that emphasizes the weight and authority of the law.",
+    "svgPath": "/assets/thick-leather-bound-legal.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "rey",
+    "label": "rey",
+    "description": "An authoritative monarch in profile seated upon a grand stone throne, adorned in a heavy ermine-trimmed mantle and an intricate filigree crown, grasping a ceremonial scepter and globus cruciger against a backdrop of minimalist Gothic arches in a continuous thinking line illustration.",
+    "svgPath": "/assets/rey.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "corona",
+    "label": "corona",
+    "description": "A continuous and fluid single-line illustration of a majestic golden imperial crown adorned with a central cross and intricate filigree, resting elegantly upon a plush, tasseled ceremonial velvet cushion within a minimalist and airy royal chamber setting.",
+    "svgPath": "/assets/corona.png",
+    "default_width_pct": 20
   }
 ]
