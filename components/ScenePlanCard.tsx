@@ -4,7 +4,8 @@ import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { AlertCircle, ChevronLeft, ChevronRight, Plus, RefreshCcw, X } from 'lucide-react'
 import { SceneCanvas } from '@/components/SceneCanvas'
-import type { ScenePlan, ScenePlanStatus } from '@/lib/presentation'
+import { MissingAssetApproval } from '@/components/MissingAssetApproval'
+import type { MissingAssetProposal, ScenePlan, ScenePlanStatus } from '@/lib/presentation'
 import type { Scene } from '@/lib/genkit/scene-flow'
 import { cn } from '@/lib/utils'
 
@@ -76,6 +77,7 @@ interface ScenePlanCardProps {
   onMoveLeft?: () => void
   onMoveRight?: () => void
   onRegenerate?: (visualDescription: string) => void
+  onApprove?: (approved: MissingAssetProposal[], skipped: MissingAssetProposal[]) => void
 }
 
 export function ScenePlanCard({
@@ -87,6 +89,7 @@ export function ScenePlanCard({
   onMoveLeft,
   onMoveRight,
   onRegenerate,
+  onApprove,
 }: ScenePlanCardProps) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(plan.title)
@@ -248,6 +251,14 @@ export function ScenePlanCard({
             />
           )}
         </div>
+      )}
+
+      {/* Missing asset approval panel */}
+      {plan.status === 'awaiting_asset_approval' && plan.missing_assets && plan.missing_assets.length > 0 && (
+        <MissingAssetApproval
+          assets={plan.missing_assets.filter((a) => !a.approved)}
+          onConfirm={(approved, skipped) => onApprove?.(approved, skipped)}
+        />
       )}
 
       {/* Generating: show visual description with pulse */}

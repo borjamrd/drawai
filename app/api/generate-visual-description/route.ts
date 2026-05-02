@@ -18,12 +18,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const visual_description = await generateVisualDescriptionFlow({
+    const result = await generateVisualDescriptionFlow({
       title,
       excerpt,
       key_concepts: key_concepts as string[],
     })
-    return Response.json({ visual_description })
+    return Response.json(result)
   } catch {
     return Response.json({ error: 'Visual description generation failed. Try again.' }, { status: 500 })
   }

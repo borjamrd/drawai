@@ -66,6 +66,7 @@ interface StoryboardViewProps {
   onUpdateScene?: (index: number, changes: Pick<ScenePlan, 'title' | 'key_concepts'>) => void
   onMoveScene?: (fromIndex: number, toIndex: number) => void
   onRegenerateScene?: (index: number, visualDescription: string) => void
+  onApproveSceneAssets?: (index: number, approved: import('@/lib/presentation').MissingAssetProposal[], skipped: import('@/lib/presentation').MissingAssetProposal[]) => void
 }
 
 export function StoryboardView({
@@ -78,6 +79,7 @@ export function StoryboardView({
   onUpdateScene,
   onMoveScene,
   onRegenerateScene,
+  onApproveSceneAssets,
 }: StoryboardViewProps) {
   const hasGenerating = scenes.some((s) => s.status.startsWith('generating_'))
   const confirmEnabled = canConfirm && scenes.length > 0 && !hasGenerating
@@ -148,6 +150,7 @@ export function StoryboardView({
                     onMoveLeft={() => onMoveScene?.(i, i - 1)}
                     onMoveRight={() => onMoveScene?.(i, i + 1)}
                     onRegenerate={(vd) => onRegenerateScene?.(i, vd)}
+                    onApprove={(approved, skipped) => onApproveSceneAssets?.(i, approved, skipped)}
                   />
                 </motion.div>
               ))}

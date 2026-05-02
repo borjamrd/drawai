@@ -1,28 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, startTransition } from 'react'
 import { motion } from 'framer-motion'
 import { Layers } from 'lucide-react'
 import { StoryboardView } from '@/components/StoryboardView'
 import type { Presentation, ScenePlan } from '@/lib/presentation'
 import { loadPresentations, savePresentation } from '@/lib/presentation-storage'
-import type { PresentationPlan, Scene } from '@/lib/genkit/scene-flow'
+import type { MissingAssetProposal } from '@/lib/presentation'
+import type { PresentationPlan, Scene, VisualDescriptionOutput } from '@/lib/genkit/scene-flow'
 
 type Phase = 'idle' | 'structure' | 'generating'
 
 export default function StoryboardPage() {
-  const [presentation, setPresentation] = useState<Presentation | null>(() => {
-    if (typeof window === 'undefined') return null
-    return loadPresentations()[0] ?? null
-  })
-  const [prompt, setPrompt] = useState<string>(() => {
-    if (typeof window === 'undefined') return ''
-    return loadPresentations()[0]?.input ?? ''
-  })
-  const [phase, setPhase] = useState<Phase>(() => {
-    if (typeof window === 'undefined') return 'idle'
-    return loadPresentations().length > 0 ? 'structure' : 'idle'
-  })
+  const [presentation, setPresentation] = useState<Presentation | null>(null)
+  const [prompt, setPrompt] = useState<string>('')
+  const [phase, setPhase] = useState<Phase>('idle')
+
+  useEffect(() => {
+    const presentations = loadPresentations()
+    if (presentations.length > 0) {
+      startTransition(() => {
+        setPresentation(presentations[0])
+        setPrompt(presentations[0]?.input ?? '')
+        setPhase('structure')
+      })
+    }
+  }, [])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -106,15 +109,35 @@ export default function StoryboardPage() {
     })
   }
 
+  // ─── asset generation helper ──────────────────────────────────────────────
+
+  async function generateAsset(asset: MissingAssetProposal): Promise<void> {
+    await fetch('/api/generate-asset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ concept: asset.concept, prompt: asset.suggested_prompt }),
+    })
+    // Non-fatal: if generation fails, the scene will render without this asset
+  }
+
+  async function generateSceneElements(visualDescription: string, index: number): Promise<void> {
+    applyAndSave((prev) => patchScene(index, { status: 'generating_scene' }, prev))
+    const res = await fetch('/api/generate-scene', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: visualDescription }),
+    })
+    if (!res.ok) throw new Error('scene')
+    const scene = (await res.json()) as Scene
+    applyAndSave((prev) => patchScene(index, { status: 'ready', scene }, prev))
+  }
+
   // ─── phase 2: confirm + generate all scenes in parallel ───────────────────
 
   async function handleConfirm() {
     if (!presentation) return
-
-    // Snapshot scenes before async work
     const scenesSnapshot = presentation.scenes
 
-    // Mark all as generating_description
     applyAndSave((prev) => ({
       ...prev,
       scenes: prev.scenes.map((s) => ({ ...s, status: 'generating_description' as const })),
@@ -122,13 +145,12 @@ export default function StoryboardPage() {
     }))
     setPhase('generating')
 
-    // Launch all pipelines independently in parallel
     scenesSnapshot.forEach((scenePlan, i) => runScenePipeline(scenePlan, i))
   }
 
   async function runScenePipeline(scenePlan: ScenePlan, index: number) {
     try {
-      // Step 1: generate visual description
+      // Step 1: visual description + missing asset detection
       const descRes = await fetch('/api/generate-visual-description', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,25 +161,61 @@ export default function StoryboardPage() {
         }),
       })
       if (!descRes.ok) throw new Error('description')
-      const { visual_description } = (await descRes.json()) as { visual_description: string }
+      const { visual_description, missing_assets } = (await descRes.json()) as VisualDescriptionOutput
 
-      applyAndSave((prev) =>
-        patchScene(index, { status: 'generating_scene', visual_description }, prev),
-      )
+      const autoAssets = missing_assets.filter((a) => a.approved)
+      const needsApproval = missing_assets.filter((a) => !a.approved)
+
+      // Pause for user approval if any ambiguous assets exist
+      if (needsApproval.length > 0) {
+        applyAndSave((prev) =>
+          patchScene(index, { status: 'awaiting_asset_approval', visual_description, missing_assets }, prev),
+        )
+        return // resumes via handleApproveSceneAssets
+      }
+
+      // Auto-generate concrete missing assets
+      if (autoAssets.length > 0) {
+        applyAndSave((prev) =>
+          patchScene(index, { status: 'generating_assets', visual_description, missing_assets }, prev),
+        )
+        await Promise.all(autoAssets.map(generateAsset))
+      } else {
+        applyAndSave((prev) => patchScene(index, { visual_description }, prev))
+      }
 
       // Step 2: generate scene elements
-      const sceneRes = await fetch('/api/generate-scene', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: visual_description }),
-      })
-      if (!sceneRes.ok) throw new Error('scene')
-      const scene = (await sceneRes.json()) as Scene
-
-      applyAndSave((prev) => patchScene(index, { status: 'ready', scene }, prev))
+      await generateSceneElements(visual_description, index)
     } catch {
       applyAndSave((prev) =>
         patchScene(index, { status: 'error', error_message: 'Generación fallida' }, prev),
+      )
+    }
+  }
+
+  // ─── phase 2b: resume after user approves missing assets ──────────────────
+
+  async function handleApproveSceneAssets(
+    index: number,
+    approved: MissingAssetProposal[],
+    _: MissingAssetProposal[],
+  ) {
+    // Capture current visual_description before async work (read from current state)
+    const currentScene = presentation?.scenes[index]
+    const visualDescription = currentScene?.visual_description
+    if (!visualDescription) return
+
+    try {
+      if (approved.length > 0) {
+        applyAndSave((prev) =>
+          patchScene(index, { status: 'generating_assets', missing_assets: [] }, prev),
+        )
+        await Promise.all(approved.map(generateAsset))
+      }
+      await generateSceneElements(visualDescription, index)
+    } catch {
+      applyAndSave((prev) =>
+        patchScene(index, { status: 'error', error_message: 'Error generando assets' }, prev),
       )
     }
   }
@@ -168,16 +226,8 @@ export default function StoryboardPage() {
     applyAndSave((prev) =>
       patchScene(index, { status: 'generating_scene', visual_description: visualDescription }, prev),
     )
-
     try {
-      const res = await fetch('/api/generate-scene', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: visualDescription }),
-      })
-      if (!res.ok) throw new Error('scene')
-      const scene = (await res.json()) as Scene
-      applyAndSave((prev) => patchScene(index, { status: 'ready', scene }, prev))
+      await generateSceneElements(visualDescription, index)
     } catch {
       applyAndSave((prev) =>
         patchScene(index, { status: 'error', error_message: 'Regeneración fallida' }, prev),
@@ -252,6 +302,7 @@ export default function StoryboardPage() {
           onUpdateScene={handleUpdateScene}
           onMoveScene={handleMoveScene}
           onRegenerateScene={handleRegenerateScene}
+          onApproveSceneAssets={handleApproveSceneAssets}
         />
       </div>
     </div>

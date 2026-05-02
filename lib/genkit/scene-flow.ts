@@ -117,41 +117,71 @@ const VisualDescriptionInputSchema = z.object({
   key_concepts: z.array(z.string()),
 });
 
+const MissingAssetSchema = z.object({
+  concept: z.string().describe("The concept that needs a new visual asset"),
+  suggested_prompt: z
+    .string()
+    .describe(
+      "Detailed image generation prompt for a minimalist line-art illustration of this concept",
+    ),
+  approved: z
+    .boolean()
+    .describe(
+      "true = auto-generate (concrete, unambiguous concept); false = needs user approval (abstract or culturally variable)",
+    ),
+});
+
+export const VisualDescriptionOutputSchema = z.object({
+  visual_description: z
+    .string()
+    .describe("Explicit visual layout instructions in Spanish for the scene generator"),
+  missing_assets: z
+    .array(MissingAssetSchema)
+    .describe("Concepts that have no suitable existing asset and must be created"),
+});
+
+export type VisualDescriptionOutput = z.infer<typeof VisualDescriptionOutputSchema>;
+
 export const generateVisualDescriptionFlow = ai.defineFlow(
   {
     name: "generateVisualDescription",
     inputSchema: VisualDescriptionInputSchema,
-    outputSchema: z.string(),
+    outputSchema: VisualDescriptionOutputSchema,
   },
   async (input) => {
-    const assetList = getSvgLibrary()
-      .map((a) => `- ${a.id}: ${a.description}`)
-      .join("\n");
+    const library = getSvgLibrary();
+    const assetList = library.map((a) => `- ${a.id}: ${a.description}`).join("\n");
 
-    const { text } = await ai.generate({
+    const { output } = await ai.generate({
       system: `You are a visual translator for animated educational scenes.
 
-Your task: translate educational content into an explicit visual layout description for a scene generator.
-The scene generator will place SVG assets on an 800×450px canvas based on your description.
+STEP 1 — ASSET MATCHING:
+For each key concept, find the best matching asset from the available library.
+If no suitable asset exists, add it to missing_assets.
 
-AVAILABLE ASSETS — reference them by their exact ID:
+AVAILABLE ASSETS:
 ${assetList}
 
-INSTRUCTIONS:
-- Map each key concept to the most fitting available asset ID
-- Describe what appears and where: side izquierdo, centro, lado derecho
-- Add timing: first element at start, each subsequent one 1-2 seconds later
-- Use 2-4 elements maximum — one per key concept
-- If a concept has no suitable asset, use the closest available metaphor
-- Write natural, director-style instructions in Spanish
+STEP 2 — MISSING ASSETS:
+For each unmatched concept, provide:
+- concept: the concept name (slug-friendly, lowercase, no accents, e.g. "pueblo-espanol")
+- suggested_prompt: detailed line-art illustration prompt for that concept
+- approved: true if the concept is concrete and unambiguous (e.g. "barco", "libro", "persona")
+             false if abstract or culturally variable (e.g. "democracia", "poder", "soberania")
 
-OUTPUT: 2-4 sentences in Spanish. No lists, no JSON. Example style:
-"Coloca X a la izquierda del canvas. A los dos segundos aparece Y en el centro. Finalmente Z aparece a la derecha."`,
+STEP 3 — VISUAL DESCRIPTION:
+Write 2-4 sentences in Spanish describing the scene layout.
+- Reference existing assets by exact ID
+- Reference missing assets by their concept slug (they will be generated before the scene renders)
+- Describe position (izquierda, centro, derecha) and timing (al inicio, a los 2 segundos...)
+
+OUTPUT: Respond ONLY with valid JSON matching the schema. No markdown, no explanation.`,
       prompt: `Escena: ${input.title}
 Contenido: ${input.excerpt}
 Conceptos visuales: ${input.key_concepts.join(", ")}`,
+      output: { schema: VisualDescriptionOutputSchema },
     });
-    return text.trim();
+    return output!;
   },
 );
 

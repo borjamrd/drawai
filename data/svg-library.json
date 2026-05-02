@@ -68,5 +68,12 @@
     "description": "A majestic 15th-century Spanish caravel in profile view, featuring three tall masts with billowing square sails adorned with the red Cross of Burgundy, a high-walled wooden stern castle, detailed rigging lines, and minimalist cresting ocean waves at its base, rendered in an elegant thinking line style.",
     "svgPath": "/assets/majestic-15th-century-spanish.png",
     "default_width_pct": 20
+  },
+  {
+    "id": "mapa-de-espana",
+    "label": "mapa-de-espana",
+    "description": "A minimalist continuous-line illustration showing the outline map of Spain, including the Balearic and Canary Islands, rendered with a clean and professional stroke on a white background.",
+    "svgPath": "/assets/mapa-de-espana.png",
+    "default_width_pct": 20
   }
 ]
