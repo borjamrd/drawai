@@ -23,7 +23,7 @@ const GRID_ROWS = 9
 const GRID_CELLS = GRID_COLS * GRID_ROWS
 
 interface SceneCanvasProps {
-  scene: Scene
+  scene: Scene | null
   showGrid?: boolean
 }
 
@@ -33,6 +33,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
 
   useEffect(() => {
     setVisibleIndices(new Set())
+    if (!scene) return
     const timers = scene.elements.map((el, i) =>
       setTimeout(
         () => setVisibleIndices((prev) => new Set([...prev, i])),
@@ -44,19 +45,27 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 tracking-tight">
-          {scene.title}
-        </h2>
-        <motion.button
-          onClick={() => setPlayKey((k) => k + 1)}
-          whileTap={{ scale: 0.96, y: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-        >
-          <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
-          Repetir
-        </motion.button>
+      <div className="flex items-center justify-between min-h-[36px]">
+        {scene ? (
+          <>
+            <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 tracking-tight">
+              {scene.title}
+            </h2>
+            <motion.button
+              onClick={() => setPlayKey((k) => k + 1)}
+              whileTap={{ scale: 0.96, y: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
+              Repetir
+            </motion.button>
+          </>
+        ) : (
+          <span className="text-xs text-zinc-400 dark:text-zinc-600 font-medium uppercase tracking-wider">
+            Lienzo vacío
+          </span>
+        )}
       </div>
 
       <div className="relative w-[800px] h-[450px] bg-white border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
@@ -79,7 +88,7 @@ export function SceneCanvas({ scene, showGrid = false }: SceneCanvasProps) {
           </div>
         )}
 
-        {scene.elements.map((el, i) => {
+        {scene?.elements.map((el, i) => {
           if (!visibleIndices.has(i)) return null
           const asset = SVG_LIBRARY_MAP[el.library_id]
           if (!asset) return null
