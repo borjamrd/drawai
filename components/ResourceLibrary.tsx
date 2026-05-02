@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { SvgAsset } from "@/lib/svg-library";
-import { PlusSquare, X, Save, Trash2, Check, Loader2 } from "lucide-react";
+import { PlusSquare, X, Save, Trash2, Check, Loader2, Eraser } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,6 +25,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
   const [editDescription, setEditDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
 
   const handleSelect = (asset: SvgAsset) => {
     setSelectedAsset(asset);
@@ -51,6 +52,29 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
       console.error("Error saving resource:", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!selectedAsset) return;
+    setIsRemovingBg(true);
+    try {
+      const res = await fetch('/api/remove-background', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedAsset.id, svgPath: selectedAsset.svgPath }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      // Force image refresh by appending cache-buster
+      const bustPath = `${selectedAsset.svgPath}?t=${Date.now()}`;
+      setSelectedAsset({ ...selectedAsset, svgPath: bustPath });
+      setAssets((prev) =>
+        prev.map((a) => (a.id === selectedAsset.id ? { ...a, svgPath: bustPath } : a)),
+      );
+    } catch (error) {
+      console.error('Error removing background:', error);
+    } finally {
+      setIsRemovingBg(false);
     }
   };
 
@@ -236,11 +260,11 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+            <div className="p-4 bg-zinc-50/50 dark:bg-zinc-900/30 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors disabled:opacity-50"
               >
                 {isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -249,6 +273,21 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 )}
                 Eliminar
               </button>
+
+              <button
+                onClick={handleRemoveBackground}
+                disabled={isRemovingBg}
+                className="flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {isRemovingBg ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Eraser className="h-4 w-4" />
+                )}
+                Quitar fondo
+              </button>
+
+              <div className="flex-1" />
 
               <button
                 onClick={handleSave}
