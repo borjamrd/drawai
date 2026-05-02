@@ -1,6 +1,9 @@
 import { genkit, z } from "genkit";
 import { googleAI } from "@genkit-ai/google-genai";
+import { GoogleGenAI } from "@google/genai";
 import { getSvgLibrary } from "@/lib/svg-library";
+
+const genai = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY });
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -92,34 +95,53 @@ export const generateSceneFlow = ai.defineFlow(
   },
 );
 
-export const generateSvgOptionsFlow = ai.defineFlow(
+export const enrichPromptFlow = ai.defineFlow(
   {
-    name: "generateSvgOptions",
+    name: "enrichPrompt",
     inputSchema: z.string(),
-    outputSchema: z.array(z.string()),
+    outputSchema: z.string(),
   },
   async (prompt) => {
-    const { output } = await ai.generate({
-      system: `You are an elite SVG Architect and illustrator specializing in the "Thinking Line" art style and minimally realistic contour sketches. Your task is to translate concepts into expressive, hand-drawn style SVG code.
-
-### 1. ARTISTIC STYLE & PHILOSOPHY ("THINKING LINE" & MINIMAL REALISM)
-- Minimally Realistic: Do NOT make it abstract or cartoonish. The drawing must clearly and accurately depict realistic anatomical features, proportions, and structural details (e.g., eyes, cheekbones, feathers, hair), but achieved through sparse, deliberate line work.
-- "Thinking Line" Technique: Use flowing, continuous-feeling contour lines that explore the form and volume of the subject. Imagine a skilled artist sketching a live model with an ink pen, where lines occasionally overlap or flow into one another to build realistic structure without dense shading.
-- Organic & Expressive: Capture the essence of realism with an elegant, expressive touch. Use bezier curves to mimic the organic, slightly imperfect stroke of a human hand sketching on paper.
-
-### 2. STRICT TECHNICAL SVG RULES
-- Wrapper: MUST use standard <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">.
-- Allowed tags: Limit strictly to <path>, <circle>, <ellipse>, or <polyline>.
-- Styling Mandate: Every single element MUST include: fill="none" stroke="#1a1a1a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round". (Note: stroke-width is strictly 1 to allow for finer realistic details).
-- The "No-Fill" Rule: NEVER use fill="black" or any colored fill, except for tiny isolated details like pupils of an eye (e.g., <circle cx="50" cy="50" r="0.8" fill="#1a1a1a" />).
-- Coordinate Math: Ensure the \`d\` attribute in paths accurately maps out realistic proportions within the 100x100 canvas. Avoid chaotic zig-zags; use smooth curves (C, Q, S) to render organic realistic shapes.
-
-### 3. TASK
-- Generate 3 distinctly different visual variants of the user's prompt (e.g., Variant 1: Side profile; Variant 2: Three-quarter view; Variant 3: Detailed front view).
-- Each string in your response array must contain ONLY the raw, valid inline <svg> code for one variant.`,
-      prompt: prompt,
-      output: { schema: z.array(z.string()) },
+    const { text } = await ai.generate({
+      system: `You are a visual prompt engineer for SVG illustration in "Thinking Line" style.
+Enrich the user's vague description into a detailed visual prompt.
+Add: pose/orientation, distinctive iconic physical features, historical/contextual clothing or accessories, scene context.
+For recognizable historical figures, include their most iconic traits (hairstyle, facial hair, clothing era, expression).
+Return ONLY the enriched prompt. One sentence. No explanation. No quotes.`,
+      prompt,
     });
-    return output!;
+    return text.trim();
   },
 );
+
+const ANGLE_HINTS = [
+  "front view, facing the viewer directly",
+  "three-quarter view, turned slightly to the right",
+  "side profile view, facing left",
+];
+
+const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. White background, no color.
+Pen contour lines only — minimalist ink sketch, sparse deliberate strokes.
+Realistic proportions, clearly recognizable subject.
+No shading, no gradients, no fills. Line art only.`;
+
+export async function generateImageOptionsFlow(prompt: string): Promise<string[]> {
+  const results = await Promise.all(
+    ANGLE_HINTS.map(async (angleHint) => {
+      const fullPrompt = `${IMAGE_STYLE_PROMPT}\nSubject: ${prompt}. Perspective: ${angleHint}.`;
+      const response = await genai.models.generateContent({
+        model: "gemini-3.1-flash-image-preview",
+        contents: fullPrompt,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts: any[] = response.candidates?.[0]?.content?.parts ?? [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const imagePart = parts.find((p: any) => p.inlineData);
+      if (!imagePart?.inlineData?.data) {
+        throw new Error(`No image returned for angle: ${angleHint}`);
+      }
+      return imagePart.inlineData.data as string;
+    })
+  );
+  return results;
+}
