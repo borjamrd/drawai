@@ -112,13 +112,6 @@
     "default_width_pct": 20
   },
   {
-    "id": "libro-gramatica",
-    "label": "libro-gramatica",
-    "description": "A minimalist continuous-line illustration of an open scholarly book with clean pages and a small bookmark, symbolizing the study and official grammar of a language, on a white background.",
-    "svgPath": "/assets/libro-gramatica.png",
-    "default_width_pct": 20
-  },
-  {
     "id": "urna-electoral",
     "label": "urna-electoral",
     "description": "A minimalist continuous-line drawing of a modern transparent ballot box with a small slot on top, containing several envelopes, representing democratic voting and political pluralism.",
@@ -137,6 +130,13 @@
     "label": "pueblo-espanol",
     "description": "A minimalist continuous-line illustration depicting a diverse group of Spanish people of different ages and backgrounds, standing together in a gesture of unity and citizenship, clean and professional strokes on a white background.",
     "svgPath": "/assets/pueblo-espanol.png",
+    "default_width_pct": 20
+  },
+  {
+    "id": "minimalist-continuous-line-illustration",
+    "label": "open scholarly book",
+    "description": "A minimalist continuous-line illustration of an open scholarly book with clean pages and a small bookmark, symbolizing the study and official grammar of a language, on a white background.",
+    "svgPath": "/assets/minimalist-continuous-line-illustration.png",
     "default_width_pct": 20
   }
 ]

@@ -59,14 +59,16 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
     if (!selectedAsset) return;
     setIsRemovingBg(true);
     try {
+      // Strip any existing cache-buster before sending to API
+      const cleanPath = selectedAsset.svgPath.split('?')[0];
       const res = await fetch('/api/remove-background', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: selectedAsset.id, svgPath: selectedAsset.svgPath }),
+        body: JSON.stringify({ id: selectedAsset.id, svgPath: cleanPath }),
       });
       if (!res.ok) throw new Error('Failed');
-      // Force image refresh by appending cache-buster
-      const bustPath = `${selectedAsset.svgPath}?t=${Date.now()}`;
+      // Force browser image refresh with cache-buster
+      const bustPath = `${cleanPath}?t=${Date.now()}`;
       setSelectedAsset({ ...selectedAsset, svgPath: bustPath });
       setAssets((prev) =>
         prev.map((a) => (a.id === selectedAsset.id ? { ...a, svgPath: bustPath } : a)),
