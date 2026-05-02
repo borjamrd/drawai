@@ -82,7 +82,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
 
   const handleDelete = async () => {
     if (!selectedAsset) return;
-    if (!confirm("¿Estás seguro de que quieres eliminar este recurso?")) return;
+    if (!confirm("Are you sure you want to delete this asset?")) return;
 
     startTransition(async () => {
       try {
@@ -104,14 +104,14 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-                  Biblioteca
+                  Library
                 </h1>
                 <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 tabular-nums">
                   {assets.length}
                 </span>
               </div>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Activos disponibles para la IA al componer escenas.
+                Assets available for the AI when composing scenes.
               </p>
             </div>
 
@@ -120,7 +120,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
               className="flex items-center gap-2 rounded-lg bg-zinc-950 dark:bg-white px-4 py-2 text-sm font-medium text-white dark:text-zinc-950 transition-opacity hover:opacity-80"
             >
               <PlusSquare className="h-4 w-4" strokeWidth={1.5} />
-              Nuevo recurso
+              Add Asset
             </Link>
           </div>
 
@@ -160,12 +160,12 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
           {assets.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 gap-3 text-zinc-400 dark:text-zinc-600">
               <PlusSquare className="h-8 w-8" strokeWidth={1.5} />
-              <p className="text-sm">No hay activos en la biblioteca.</p>
+              <p className="text-sm">No assets in the library.</p>
               <Link
                 href="/recursos/crear-recurso"
                 className="text-sm text-zinc-950 dark:text-white underline underline-offset-4"
               >
-                Añadir el primero
+                Add the first one
               </Link>
             </div>
           )}
@@ -197,7 +197,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
           >
             <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
               <h2 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">
-                Detalles del recurso
+                Asset Details
               </h2>
               <button
                 onClick={() => setSelectedAsset(null)}
@@ -221,7 +221,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                    ID (no editable)
+                    ID (non-editable)
                   </label>
                   <code className="block w-full px-3 py-2 bg-white dark:bg-zinc-900 rounded-md text-sm text-zinc-400 font-mono">
                     {selectedAsset.id}
@@ -233,7 +233,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                     htmlFor="edit-label"
                     className="text-xs font-medium text-zinc-500 uppercase tracking-wider"
                   >
-                    Título
+                    Title
                   </label>
                   <input
                     id="edit-label"
@@ -249,7 +249,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                     htmlFor="edit-desc"
                     className="text-xs font-medium text-zinc-500 uppercase tracking-wider"
                   >
-                    Descripción
+                    Description
                   </label>
                   <textarea
                     id="edit-desc"
@@ -273,7 +273,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                Eliminar
+                Delete
               </button>
 
               <button
@@ -286,7 +286,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 ) : (
                   <Eraser className="h-4 w-4" />
                 )}
-                Quitar fondo
+                Remove background
               </button>
 
               <div className="flex-1" />
@@ -312,7 +312,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {hasSaved ? "Guardado" : "Guardar cambios"}
+                {hasSaved ? "Saved" : "Save changes"}
               </button>
             </div>
           </motion.div>

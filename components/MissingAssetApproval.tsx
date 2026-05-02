@@ -43,7 +43,7 @@ export function MissingAssetApproval({ assets, onConfirm }: MissingAssetApproval
       <div className="flex items-center gap-2">
         <Sparkles className="h-3.5 w-3.5 text-orange-500" strokeWidth={1.5} />
         <span className="text-[11px] font-semibold text-orange-700 dark:text-orange-400">
-          Assets faltantes
+          Missing assets
         </span>
         <span className="font-mono text-[10px] text-orange-500 dark:text-orange-500/70">
           {assets.length}
@@ -71,7 +71,7 @@ export function MissingAssetApproval({ assets, onConfirm }: MissingAssetApproval
                   className="flex items-center gap-1 text-[10px] text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300"
                 >
                   <SkipForward className="h-2.5 w-2.5" strokeWidth={2} />
-                  {isSkipped ? 'Incluir' : 'Omitir'}
+                  {isSkipped ? 'Include' : 'Skip'}
                 </button>
               </div>
               {!isSkipped && (
@@ -95,7 +95,7 @@ export function MissingAssetApproval({ assets, onConfirm }: MissingAssetApproval
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-3 py-2 text-[11px] font-semibold text-white shadow-sm hover:bg-orange-600 transition-colors"
         >
           <CheckCircle className="h-3 w-3" strokeWidth={2} />
-          Aprobar todo
+          Approve all
         </motion.button>
         {skipped.size < drafts.length && (
           <motion.button
@@ -104,7 +104,7 @@ export function MissingAssetApproval({ assets, onConfirm }: MissingAssetApproval
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-[11px] font-medium text-zinc-600 hover:bg-zinc-50 transition-colors dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
-            Confirmar selección
+            Confirm selection
           </motion.button>
         )}
       </div>

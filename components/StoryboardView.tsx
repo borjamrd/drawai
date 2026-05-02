@@ -33,10 +33,10 @@ function StoryboardEmptyState() {
       </div>
       <div className="space-y-1 text-center">
         <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-          Sin escenas todavía
+          No scenes yet
         </p>
         <p className="max-w-[280px] text-xs text-zinc-400 dark:text-zinc-600">
-          Describe un concepto complejo y el sistema dividirá el contenido en escenas educativas.
+          Describe a complex concept and the system will split the content into educational scenes.
         </p>
       </div>
     </div>
@@ -99,7 +99,7 @@ export function StoryboardView({
             </span>
             {scenes.length > 0 && (
               <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-600">
-                {scenes.length} escena{scenes.length !== 1 ? 's' : ''}
+                {scenes.length} scene{scenes.length !== 1 ? 's' : ''}
               </span>
             )}
           </div>
@@ -118,7 +118,7 @@ export function StoryboardView({
               )}
             >
               <CheckCircle className="h-3.5 w-3.5" strokeWidth={2} />
-              Confirmar estructura
+              Confirm structure
             </motion.button>
           )}
 
@@ -128,7 +128,7 @@ export function StoryboardView({
               className="flex items-center gap-2 rounded-lg bg-zinc-950 px-4 py-2 text-xs font-medium text-white shadow-md transition-all hover:opacity-90 dark:bg-white dark:text-zinc-950"
             >
               <Eye className="h-3.5 w-3.5" strokeWidth={2} />
-              Ver storyboard
+              View storyboard
             </Link>
           )}
         </div>

@@ -60,7 +60,7 @@ export default function Home() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `escena-${scene.title.toLowerCase().replace(/\s+/g, "-")}.webm`;
+        a.download = `scene-${scene.title.toLowerCase().replace(/\s+/g, "-")}.webm`;
         a.click();
         setIsDownloadingVideo(false);
       };
@@ -142,7 +142,7 @@ export default function Home() {
       render();
     } catch (err) {
       console.error("Error recording video:", err);
-      setError("No se pudo generar el video.");
+      setError("Could not generate video.");
       setIsDownloadingVideo(false);
     }
   }
@@ -196,12 +196,12 @@ export default function Home() {
 
       // Trigger download
       const link = document.createElement("a");
-      link.download = `escena-${scene.title.toLowerCase().replace(/\s+/g, "-")}.png`;
+      link.download = `scene-${scene.title.toLowerCase().replace(/\s+/g, "-")}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (err) {
       console.error("Error downloading scene:", err);
-      setError("No se pudo descargar la imagen.");
+      setError("Could not download image.");
     } finally {
       setIsDownloading(false);
     }
@@ -223,7 +223,7 @@ export default function Home() {
       const data: Scene = await res.json();
       setScene(data);
     } catch {
-      setError("Algo salió mal, inténtalo de nuevo.");
+      setError("Something went wrong, please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -235,11 +235,10 @@ export default function Home() {
       <div className="w-full max-w-4xl mx-auto px-8 pt-10 pb-6 flex flex-col gap-6">
         <div className="text-center space-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-            Generador de Escenas
+            Scene Generator
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Describe una escena y la IA la animará con los elementos de tu
-            biblioteca.
+            Describe a scene and the AI will animate it using elements from your library.
           </p>
         </div>
 
@@ -247,7 +246,7 @@ export default function Home() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ej: Muestra un mapa en el centro que ocupe el 44% del canvas. Al segundo, aparece un indígena en el lado izquierdo. Luego aparece un soldado español en el lado derecho"
+            placeholder="e.g. Show a map in the center taking up 44% of the canvas. One second later, an indigenous person appears on the left. Then a Spanish soldier appears on the right."
             className="w-full h-24 resize-none rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all shadow-sm group-hover:shadow-md"
             disabled={isLoading}
           />
@@ -269,7 +268,7 @@ export default function Home() {
               ) : (
                 <ArrowRight className="h-4 w-4" />
               )}
-              {isLoading ? "Generando…" : "Generar"}
+              {isLoading ? "Generating…" : "Generate"}
             </motion.button>
           </div>
         </form>
@@ -294,7 +293,7 @@ export default function Home() {
                     <div className="absolute inset-0 rounded-full border-4 border-zinc-950 dark:border-white border-t-transparent animate-spin" />
                   </div>
                   <p className="text-sm font-medium text-zinc-500 animate-pulse">
-                    Componiendo escena...
+                    Composing scene...
                   </p>
                 </div>
               </motion.div>
@@ -315,7 +314,7 @@ export default function Home() {
         <div className="w-48 pt-[48px] flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
-              Visualización
+              Visualization
             </p>
             <motion.button
               type="button"
@@ -330,7 +329,7 @@ export default function Home() {
             >
               <div className="flex items-center gap-2.5">
                 <Grid3X3 className="h-4 w-4" strokeWidth={showGrid ? 2 : 1.5} />
-                <span>Cuadrícula</span>
+                <span>Grid</span>
               </div>
               <div
                 className={cn(
@@ -356,7 +355,7 @@ export default function Home() {
                 ) : (
                   <Download className="h-4 w-4" strokeWidth={1.5} />
                 )}
-                <span>Imagen</span>
+                <span>Image</span>
               </motion.button>
 
               <motion.button

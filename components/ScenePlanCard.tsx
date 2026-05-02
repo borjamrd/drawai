@@ -10,12 +10,12 @@ import type { Scene } from '@/lib/genkit/scene-flow'
 import { cn } from '@/lib/utils'
 
 const STATUS_LABELS: Record<ScenePlanStatus, string> = {
-  pending: 'Pendiente',
-  generating_description: 'Generando descripción...',
-  awaiting_asset_approval: 'Revisión de assets',
-  generating_assets: 'Generando assets...',
-  generating_scene: 'Generando escena...',
-  ready: 'Lista',
+  pending: 'Pending',
+  generating_description: 'Generating description...',
+  awaiting_asset_approval: 'Asset review',
+  generating_assets: 'Generating assets...',
+  generating_scene: 'Generating scene...',
+  ready: 'Ready',
   error: 'Error',
 }
 
@@ -226,7 +226,7 @@ export function ScenePlanCard({
               className="inline-flex items-center gap-1 rounded-md border border-dashed border-zinc-300 px-2 py-0.5 text-[11px] text-zinc-400 transition-colors hover:text-zinc-600 dark:border-zinc-700 dark:hover:text-zinc-300"
             >
               <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
-              Añadir
+              Add
             </button>
           )}
           {addingConcept && (
@@ -246,7 +246,7 @@ export function ScenePlanCard({
                   setAddingConcept(false)
                 }
               }}
-              placeholder="concepto..."
+              placeholder="concept..."
               className="w-24 rounded-md border border-zinc-300 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:ring-zinc-600"
             />
           )}
@@ -279,7 +279,7 @@ export function ScenePlanCard({
       {showLevel2 && (
         <div className="flex flex-col gap-2">
           <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-600">
-            Descripción visual
+            Visual description
           </label>
           <textarea
             value={draftVisualDesc}
@@ -295,7 +295,7 @@ export function ScenePlanCard({
             className="flex items-center gap-1.5 self-start rounded-lg border border-zinc-200 px-3 py-1.5 text-[11px] font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
           >
             <RefreshCcw className="h-3 w-3" strokeWidth={2} />
-            Regenerar escena
+            Regenerate scene
           </motion.button>
         </div>
       )}

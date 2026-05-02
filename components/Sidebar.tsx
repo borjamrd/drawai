@@ -6,10 +6,10 @@ import { LayoutDashboard, Library, PlusSquare, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
-  { name: 'Generador', href: '/', icon: LayoutDashboard },
+  { name: 'Generator', href: '/', icon: LayoutDashboard },
   { name: 'Storyboard', href: '/storyboard', icon: Layers },
-  { name: 'Biblioteca', href: '/recursos', icon: Library },
-  { name: 'Nuevo Recurso', href: '/recursos/crear-recurso', icon: PlusSquare },
+  { name: 'Library', href: '/recursos', icon: Library },
+  { name: 'New Asset', href: '/recursos/crear-recurso', icon: PlusSquare },
 ]
 
 export function Sidebar() {

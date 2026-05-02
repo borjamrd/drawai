@@ -10,29 +10,29 @@ function isPromptPoor(text: string): boolean {
   const words = text.trim().split(/\s+/);
   if (words.length < 4) return true;
   const contextWords = [
-    "de pie",
-    "sentado",
-    "con ",
-    "en ",
-    "sosteniendo",
-    "mirando",
-    "perfil",
-    "frente",
-    "lado",
-    "junto",
-    "sobre",
-    "dentro",
+    "standing",
+    "sitting",
+    "with ",
+    "in ",
+    "holding",
+    "looking",
+    "profile",
+    "front",
+    "side",
+    "next to",
+    "on ",
+    "inside",
   ];
   const adjectives = [
-    "antiguo",
-    "moderno",
-    "viejo",
-    "joven",
+    "ancient",
+    "modern",
+    "old",
+    "young",
     "colonial",
     "medieval",
-    "victoriano",
-    "clásico",
-    "histórico",
+    "victorian",
+    "classic",
+    "historic",
   ];
   const lower = text.toLowerCase();
   const hasContext = contextWords.some((w) => lower.includes(w));
@@ -41,18 +41,18 @@ function isPromptPoor(text: string): boolean {
 }
 
 const STOP_WORDS = [
-  "de pie",
-  "sentado",
-  "sosteniendo",
-  "mirando",
-  " en ",
-  " de ",
-  " con ",
-  " sin ",
-  " sobre ",
-  " por ",
-  " para ",
-  " junto",
+  "standing",
+  "sitting",
+  "holding",
+  "looking",
+  " in ",
+  " of ",
+  " with ",
+  " without ",
+  " on ",
+  " by ",
+  " for ",
+  " next to",
 ];
 
 function suggestName(prompt: string): string {
@@ -68,23 +68,17 @@ function suggestName(prompt: string): string {
 
 function nameToSlug(name: string): string {
   const stopWords = new Set([
-    "el",
-    "la",
-    "los",
-    "las",
-    "un",
-    "una",
-    "unos",
-    "unas",
-    "de",
-    "del",
-    "al",
-    "con",
-    "para",
-    "por",
-    "en",
-    "y",
+    "the",
     "a",
+    "an",
+    "of",
+    "with",
+    "for",
+    "by",
+    "in",
+    "and",
+    "at",
+    "on",
   ]);
   return name
     .normalize("NFD")
@@ -128,7 +122,7 @@ export default function CrearRecursoPage() {
       const data = await res.json();
       setOptions(data.options || []);
     } catch {
-      setError("No se pudo generar. Inténtalo de nuevo.");
+      setError("Could not generate. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -178,14 +172,14 @@ export default function CrearRecursoPage() {
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mb-4"
           >
             <ArrowLeft className="h-3 w-3" strokeWidth={1.5} />
-            Biblioteca
+            Library
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
-            Nuevo recurso
+            New Asset
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            Describe el activo y la IA lo dibujará. Selecciona la versión que
-            más te guste.
+            Describe the asset and the AI will draw it. Select the version you
+            like best.
           </p>
         </div>
 
@@ -196,7 +190,7 @@ export default function CrearRecursoPage() {
               htmlFor="prompt"
               className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             >
-              Descripción
+              Description
             </label>
             <textarea
               id="prompt"
@@ -205,7 +199,7 @@ export default function CrearRecursoPage() {
                 setPrompt(e.target.value);
                 setSuggestedPrompt(null);
               }}
-              placeholder="ej: un soldado colonial de pie con uniforme y rifle…"
+              placeholder="e.g. a colonial soldier standing with uniform and rifle..."
               rows={3}
               disabled={loading || enriching}
               className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
@@ -230,7 +224,7 @@ export default function CrearRecursoPage() {
             ) : (
               <Wand2 className="h-4 w-4" strokeWidth={1.5} />
             )}
-            {loading ? "Creando..." : enriching ? "Analizando…" : "Crear"}
+            {loading ? "Creating..." : enriching ? "Analyzing…" : "Create"}
           </motion.button>
 
           {/* Suggestion banner */}
@@ -252,7 +246,7 @@ export default function CrearRecursoPage() {
                     />
                     <div className="flex flex-col gap-1">
                       <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Sugerencia de estilo
+                        Style suggestion
                       </span>
                       <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
                         {suggestedPrompt}
@@ -271,7 +265,7 @@ export default function CrearRecursoPage() {
                       }}
                       className="rounded-md bg-zinc-950 dark:bg-white px-3.5 py-1.5 text-xs font-medium text-white dark:text-zinc-950 transition-opacity hover:opacity-80"
                     >
-                      Usar sugerencia
+                      Use suggestion
                     </motion.button>
                     <motion.button
                       type="button"
@@ -284,7 +278,7 @@ export default function CrearRecursoPage() {
                       }}
                       className="rounded-md px-3.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
                     >
-                      Continuar sin cambios
+                      Continue without changes
                     </motion.button>
                   </div>
                 </div>
@@ -309,7 +303,7 @@ export default function CrearRecursoPage() {
               <input type="hidden" name="id" value={slug} />
 
               <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                Metadatos
+                Metadata
               </p>
 
               {/* Name */}
@@ -318,7 +312,7 @@ export default function CrearRecursoPage() {
                   htmlFor="label"
                   className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 >
-                  Nombre
+                  Name
                 </label>
                 <input
                   id="label"
@@ -327,7 +321,7 @@ export default function CrearRecursoPage() {
                   required
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
-                  placeholder="ej: Soldado Colonial"
+                  placeholder="e.g. Colonial Soldier"
                   className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
                 />
                 {slug && (
@@ -343,7 +337,7 @@ export default function CrearRecursoPage() {
                   htmlFor="description"
                   className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
                 >
-                  Descripción
+                  Description
                 </label>
                 <textarea
                   id="description"
@@ -351,7 +345,7 @@ export default function CrearRecursoPage() {
                   required
                   value={descValue}
                   onChange={(e) => setDescValue(e.target.value)}
-                  placeholder="Describe el activo para que la IA entienda cuándo usarlo."
+                  placeholder="Describe the asset so the AI understands when to use it."
                   rows={3}
                   className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
                 />
@@ -365,7 +359,7 @@ export default function CrearRecursoPage() {
                 className="flex items-center gap-2 self-start rounded-lg bg-zinc-950 dark:bg-white px-5 py-2.5 text-sm font-medium text-white dark:text-zinc-950 disabled:opacity-40 transition-opacity hover:opacity-80"
               >
                 <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
-                Guardar recurso
+                Save Asset
               </motion.button>
             </motion.form>
           )}
@@ -402,7 +396,7 @@ export default function CrearRecursoPage() {
               className="flex flex-col gap-4 w-full max-w-lg"
             >
               <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                Haz click en la imagen para aceptarla
+                Click on the image to accept it
               </p>
               <div className="">
                 {options.map((svg, i) => (
@@ -436,7 +430,7 @@ export default function CrearRecursoPage() {
                   >
                     <img
                       src={`data:image/png;base64,${svg}`}
-                      alt={`Variante ${i + 1}`}
+                      alt={`Variant ${i + 1}`}
                       className="w-full h-full object-contain"
                     />
                   </motion.button>
@@ -453,7 +447,7 @@ export default function CrearRecursoPage() {
               className="flex flex-col items-center gap-3 text-zinc-400 dark:text-zinc-600"
             >
               <Wand2 className="h-8 w-8" strokeWidth={1.5} />
-              <p className="text-sm">Las opciones generadas aparecerán aquí</p>
+              <p className="text-sm">Generated options will appear here</p>
             </motion.div>
           )}
         </AnimatePresence>

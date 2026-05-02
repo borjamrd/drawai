@@ -55,7 +55,7 @@ function Thumbnail({
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-zinc-100 dark:bg-zinc-800">
           <span className="text-[10px] font-medium text-zinc-400">
-            Sin escena
+            No scene
           </span>
         </div>
       )}
@@ -144,7 +144,7 @@ export function StoryboardViewer({ scenes }: StoryboardViewerProps) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <p className="text-sm text-zinc-400">
-          No hay escenas listas para visualizar.
+          No scenes ready to visualize.
         </p>
       </div>
     );
@@ -248,7 +248,7 @@ export function StoryboardViewer({ scenes }: StoryboardViewerProps) {
 
       {/* Keyboard hint */}
       <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-600">
-        Usa ← → para navegar entre escenas
+        Use ← → to navigate between scenes
       </p>
     </div>
   );

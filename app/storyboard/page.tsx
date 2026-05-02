@@ -88,9 +88,9 @@ export default function StoryboardPage() {
       savePresentation(newPresentation)
       setPhase('structure')
     } catch {
-      setError('Algo salió mal, inténtalo de nuevo.')
+      setError('Something went wrong, please try again.')
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -188,7 +188,7 @@ export default function StoryboardPage() {
       await generateSceneElements(visual_description, index)
     } catch {
       applyAndSave((prev) =>
-        patchScene(index, { status: 'error', error_message: 'Generación fallida' }, prev),
+        patchScene(index, { status: 'error', error_message: 'Generation failed' }, prev),
       )
     }
   }
@@ -215,7 +215,7 @@ export default function StoryboardPage() {
       await generateSceneElements(visualDescription, index)
     } catch {
       applyAndSave((prev) =>
-        patchScene(index, { status: 'error', error_message: 'Error generando assets' }, prev),
+        patchScene(index, { status: 'error', error_message: 'Error generating assets' }, prev),
       )
     }
   }
@@ -230,7 +230,7 @@ export default function StoryboardPage() {
       await generateSceneElements(visualDescription, index)
     } catch {
       applyAndSave((prev) =>
-        patchScene(index, { status: 'error', error_message: 'Regeneración fallida' }, prev),
+        patchScene(index, { status: 'error', error_message: 'Regeneration failed' }, prev),
       )
     }
   }
@@ -250,7 +250,7 @@ export default function StoryboardPage() {
             </h1>
           </div>
           <p className="max-w-[520px] text-sm text-zinc-500 dark:text-zinc-400">
-            Describe un concepto complejo y el sistema lo dividirá en escenas educativas animadas.
+            Describe a complex concept and the system will split it into animated educational scenes.
           </p>
         </div>
 
@@ -258,7 +258,7 @@ export default function StoryboardPage() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ej: Explica los tres primeros artículos de la Constitución española, incluyendo la forma de gobierno y los valores fundamentales del Estado."
+            placeholder="e.g. Explain the first three articles of the Spanish Constitution, including the form of government and fundamental values of the State."
             rows={4}
             className="w-full resize-none rounded-2xl border border-zinc-200 bg-white px-6 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-zinc-400 group-hover:shadow-md disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-600"
             disabled={isLoading}
@@ -281,7 +281,7 @@ export default function StoryboardPage() {
               ) : (
                 <Layers className="h-4 w-4" strokeWidth={2} />
               )}
-              {isLoading ? 'Analizando...' : 'Generar storyboard'}
+              {isLoading ? 'Analyzing...' : 'Generate storyboard'}
             </motion.button>
           </div>
         </form>
