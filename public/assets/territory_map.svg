@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#27AE60"/>
-  <path d="M10 20 L20 12 L38 15 L54 10 L58 30 L50 45 L35 55 L18 50 L8 38 Z" fill="#F0E68C" stroke="#8B6914" stroke-width="1.5"/>
-  <circle cx="30" cy="32" r="3" fill="#E74C3C"/>
-  <line x1="8" y1="8" x2="56" y2="8" stroke="#ECF0F1" stroke-width="0.5" stroke-dasharray="2"/>
-  <line x1="8" y1="8" x2="8" y2="56" stroke="#ECF0F1" stroke-width="0.5" stroke-dasharray="2"/>
-  <text x="32" y="62" text-anchor="middle" font-size="5" fill="white" font-family="sans-serif">mapa</text>
-</svg>

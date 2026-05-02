@@ -107,7 +107,7 @@ export default function Home() {
       </div>
 
       {/* Right panel: canvas output */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-12 bg-zinc-50 dark:bg-zinc-900 overflow-auto">
+      <div className="flex-1 flex items-center justify-center p-8 md:p-12 bg-white dark:bg-zinc-900 overflow-auto">
         <AnimatePresence mode="wait">
           {isLoading && (
             <motion.div

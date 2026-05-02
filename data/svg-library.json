@@ -1,47 +1,5 @@
 [
   {
-    "id": "soldier_standing",
-    "label": "Soldado Colonial",
-    "description": "A standing colonial soldier in uniform, holding a rifle",
-    "svgPath": "/assets/soldier_standing.svg"
-  },
-  {
-    "id": "indigenous_figure",
-    "label": "Figura Indígena",
-    "description": "A standing indigenous person in traditional clothing",
-    "svgPath": "/assets/indigenous_figure.svg"
-  },
-  {
-    "id": "territory_map",
-    "label": "Mapa de Territorio",
-    "description": "A simple map outline showing a territory or region",
-    "svgPath": "/assets/territory_map.svg"
-  },
-  {
-    "id": "colonial_flag",
-    "label": "Bandera Colonial",
-    "description": "A flag on a pole representing a colonial power",
-    "svgPath": "/assets/colonial_flag.svg"
-  },
-  {
-    "id": "directional_arrow",
-    "label": "Flecha Direccional",
-    "description": "A bold arrow indicating movement or direction",
-    "svgPath": "/assets/directional_arrow.svg"
-  },
-  {
-    "id": "arrow-right",
-    "label": "arrow-right",
-    "description": "es una flecha apuntando hacia la derecha",
-    "svgPath": "/assets/arrow-right.svg"
-  },
-  {
-    "id": "soldado-español",
-    "label": "soldado español",
-    "description": "Soldado español",
-    "svgPath": "/assets/soldado-español.png"
-  },
-  {
     "id": "indigena mexicano",
     "label": "indigena-mexicano",
     "description": "un indigena mexicano en época de la conquista de américa con atuendos de la época",
@@ -55,14 +13,14 @@
   },
   {
     "id": "mapa",
-    "label": "Mapa",
+    "label": "Mapa america",
     "description": "Mapa en blanco de america",
     "svgPath": "/assets/mapa.png"
   },
   {
-    "id": "crea-una-institucion-edificio-del-inap-muestra-un-cartel",
-    "label": "Crea una institucion (edificio) del INAP (muestra un cartel",
-    "description": "Crea una institucion (edificio) del INAP (muestra un cartel con el titulo)",
-    "svgPath": "/assets/crea-una-institucion-edificio-del-inap-muestra-un-cartel.png"
+    "id": "continuous-and-expressive",
+    "label": "mapa america (expresive)",
+    "description": "A continuous and expressive thinking line depicting the complete silhouette of the Americas from the Arctic north to the tip of Patagonia, featuring the textured ridges of the Andes and Rocky Mountains, accented by a classic nautical compass rose and subtle flowing strokes representing the surrounding oceanic currents.",
+    "svgPath": "/assets/continuous-and-expressive.png"
   }
 ]

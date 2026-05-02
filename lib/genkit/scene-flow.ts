@@ -114,11 +114,11 @@ Return ONLY the enriched prompt. One sentence. No explanation. No quotes.`,
   },
 );
 
-const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. White background, no color, no background scene.
+const IMAGE_STYLE_PROMPT = `Hand-drawn black and white illustration. Pure white background (#FFFFFF), no color, no background scene.
 Pen contour lines only — minimalist ink sketch, sparse deliberate strokes.
 Realistic proportions. Single isolated subject, centered, full body visible.
 Exactly one subject. No other figures, no duplicates, no background elements.
-No shading, no gradients, no fills. Line art only.`;
+No shading, no gradients, no fills. Line art only. Strictly avoid any off-white or gray background colors.`;
 
 export async function generateImageOptionsFlow(
   prompt: string,

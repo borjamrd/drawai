@@ -67,13 +67,34 @@ function suggestName(prompt: string): string {
 }
 
 function nameToSlug(name: string): string {
+  const stopWords = new Set([
+    "el",
+    "la",
+    "los",
+    "las",
+    "un",
+    "una",
+    "unos",
+    "unas",
+    "de",
+    "del",
+    "al",
+    "con",
+    "para",
+    "por",
+    "en",
+    "y",
+    "a",
+  ]);
   return name
     .normalize("NFD")
     .replace(/\p{Mn}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word))
+    .slice(0, 3)
+    .join("-");
 }
 
 export default function CrearRecursoPage() {
@@ -223,7 +244,7 @@ export default function CrearRecursoPage() {
                 transition={{ type: "spring", stiffness: 200, damping: 24 }}
                 className="overflow-hidden"
               >
-                <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/60 px-4 py-3.5">
+                <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900/60 px-4 py-3.5">
                   <div className="flex items-start gap-2.5">
                     <Sparkles
                       className="h-3.5 w-3.5 text-zinc-400 mt-0.5 shrink-0"
@@ -352,7 +373,7 @@ export default function CrearRecursoPage() {
       </div>
 
       {/* Right panel: SVG options + selected preview */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-12 bg-zinc-50 dark:bg-zinc-900 overflow-auto">
+      <div className="flex-1 flex items-center justify-center p-8 md:p-12 bg-white dark:bg-zinc-900 overflow-auto">
         <AnimatePresence mode="wait">
           {loading && (
             <motion.div

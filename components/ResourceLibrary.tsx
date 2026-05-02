@@ -1,67 +1,76 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import { SvgAsset } from '@/lib/svg-library'
-import { PlusSquare, X, Save, Trash2, Check, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import { updateResource, deleteResource } from '@/app/recursos/crear-recurso/actions'
-import { cn } from '@/lib/utils'
+import { useState, useTransition } from "react";
+import { SvgAsset } from "@/lib/svg-library";
+import { PlusSquare, X, Save, Trash2, Check, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  updateResource,
+  deleteResource,
+} from "@/app/recursos/crear-recurso/actions";
+import { cn } from "@/lib/utils";
 
 interface ResourceLibraryProps {
-  initialAssets: SvgAsset[]
+  initialAssets: SvgAsset[];
 }
 
 export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
-  const [assets, setAssets] = useState(initialAssets)
-  const [selectedAsset, setSelectedAsset] = useState<SvgAsset | null>(null)
-  const [isPending, startTransition] = useTransition()
-  
+  const [assets, setAssets] = useState(initialAssets);
+  const [selectedAsset, setSelectedAsset] = useState<SvgAsset | null>(null);
+  const [isPending, startTransition] = useTransition();
+
   // Edit state
-  const [editLabel, setEditLabel] = useState('')
-  const [editDescription, setEditDescription] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [hasSaved, setHasSaved] = useState(false)
+  const [editLabel, setEditLabel] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
 
   const handleSelect = (asset: SvgAsset) => {
-    setSelectedAsset(asset)
-    setEditLabel(asset.label)
-    setEditDescription(asset.description)
-    setHasSaved(false)
-  }
+    setSelectedAsset(asset);
+    setEditLabel(asset.label);
+    setEditDescription(asset.description);
+    setHasSaved(false);
+  };
 
   const handleSave = async () => {
-    if (!selectedAsset) return
-    setIsSaving(true)
+    if (!selectedAsset) return;
+    setIsSaving(true);
     try {
-      await updateResource(selectedAsset.id, editLabel, editDescription)
-      setAssets(prev => prev.map(a => a.id === selectedAsset.id ? { ...a, label: editLabel, description: editDescription } : a))
-      setHasSaved(true)
-      setTimeout(() => setHasSaved(false), 2000)
+      await updateResource(selectedAsset.id, editLabel, editDescription);
+      setAssets((prev) =>
+        prev.map((a) =>
+          a.id === selectedAsset.id
+            ? { ...a, label: editLabel, description: editDescription }
+            : a,
+        ),
+      );
+      setHasSaved(true);
+      setTimeout(() => setHasSaved(false), 2000);
     } catch (error) {
-      console.error('Error saving resource:', error)
+      console.error("Error saving resource:", error);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!selectedAsset) return
-    if (!confirm('¿Estás seguro de que quieres eliminar este recurso?')) return
-    
+    if (!selectedAsset) return;
+    if (!confirm("¿Estás seguro de que quieres eliminar este recurso?")) return;
+
     startTransition(async () => {
       try {
-        await deleteResource(selectedAsset.id)
-        setAssets(prev => prev.filter(a => a.id !== selectedAsset.id))
-        setSelectedAsset(null)
+        await deleteResource(selectedAsset.id);
+        setAssets((prev) => prev.filter((a) => a.id !== selectedAsset.id));
+        setSelectedAsset(null);
       } catch (error) {
-        console.error('Error deleting resource:', error)
+        console.error("Error deleting resource:", error);
       }
-    })
-  }
+    });
+  };
 
   return (
-    <div className="relative flex h-full min-h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="relative flex h-full min-h-screen overflow-hidden bg-white dark:bg-zinc-950">
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-10 max-w-7xl mx-auto">
@@ -96,12 +105,14 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 onClick={() => handleSelect(asset)}
                 className="group flex flex-col gap-2.5 text-left transition-all"
               >
-                <div className={cn(
-                  "aspect-square rounded-xl flex items-center justify-center p-6 transition-all duration-200 ease-out",
-                  selectedAsset?.id === asset.id 
-                    ? "bg-zinc-200 dark:bg-zinc-800 ring-2 ring-zinc-950 dark:ring-white" 
-                    : "bg-zinc-100 dark:bg-zinc-800/60 group-hover:scale-[1.03] group-hover:bg-zinc-200/50 dark:group-hover:bg-zinc-800"
-                )}>
+                <div
+                  className={cn(
+                    "aspect-square rounded-xl flex items-center justify-center p-6 transition-all duration-200 ease-out",
+                    selectedAsset?.id === asset.id
+                      ? "bg-white border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-800 ring-2 ring-zinc-950 dark:ring-white"
+                      : "bg-white border border-zinc-200 dark:border-zinc-800 dark:bg-zinc-800/60 group-hover:scale-[1.03]",
+                  )}
+                >
                   <img
                     src={asset.svgPath}
                     alt={asset.label}
@@ -152,10 +163,10 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
       <AnimatePresence>
         {selectedAsset && (
           <motion.div
-            initial={{ x: '100%' }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed md:relative top-0 right-0 h-full w-[400px] max-w-[90vw] bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 z-50 shadow-2xl md:shadow-none flex flex-col"
           >
             <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
@@ -172,7 +183,7 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
 
             <div className="flex-1 overflow-auto p-6 space-y-8">
               {/* Image Preview */}
-              <div className="aspect-square rounded-xl bg-zinc-50 dark:bg-zinc-900/50 flex items-center justify-center p-12 border border-zinc-100 dark:border-zinc-800">
+              <div className="aspect-square rounded-xl bg-white dark:bg-zinc-900/50 flex items-center justify-center p-12 border border-zinc-100 dark:border-zinc-800">
                 <img
                   src={selectedAsset.svgPath}
                   alt={selectedAsset.label}
@@ -186,13 +197,16 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                   <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                     ID (no editable)
                   </label>
-                  <code className="block w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-md text-sm text-zinc-400 font-mono">
+                  <code className="block w-full px-3 py-2 bg-white dark:bg-zinc-900 rounded-md text-sm text-zinc-400 font-mono">
                     {selectedAsset.id}
                   </code>
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="edit-label" className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                  <label
+                    htmlFor="edit-label"
+                    className="text-xs font-medium text-zinc-500 uppercase tracking-wider"
+                  >
                     Título
                   </label>
                   <input
@@ -205,7 +219,10 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="edit-desc" className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                  <label
+                    htmlFor="edit-desc"
+                    className="text-xs font-medium text-zinc-500 uppercase tracking-wider"
+                  >
                     Descripción
                   </label>
                   <textarea
@@ -225,18 +242,26 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 disabled={isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors disabled:opacity-50"
               >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
                 Eliminar
               </button>
 
               <button
                 onClick={handleSave}
-                disabled={isSaving || (editLabel === selectedAsset.label && editDescription === selectedAsset.description)}
+                disabled={
+                  isSaving ||
+                  (editLabel === selectedAsset.label &&
+                    editDescription === selectedAsset.description)
+                }
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                  hasSaved 
-                    ? "bg-emerald-500 text-white" 
-                    : "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:opacity-80 disabled:opacity-40"
+                  hasSaved
+                    ? "bg-emerald-500 text-white"
+                    : "bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:opacity-80 disabled:opacity-40",
                 )}
               >
                 {isSaving ? (
@@ -246,12 +271,12 @@ export function ResourceLibrary({ initialAssets }: ResourceLibraryProps) {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {hasSaved ? 'Guardado' : 'Guardar cambios'}
+                {hasSaved ? "Guardado" : "Guardar cambios"}
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
