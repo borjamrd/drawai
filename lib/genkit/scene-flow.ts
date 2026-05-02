@@ -1,6 +1,6 @@
 import { genkit, z } from 'genkit'
 import { googleAI } from '@genkit-ai/google-genai'
-import { SVG_LIBRARY } from '@/lib/svg-library'
+import { getSvgLibrary } from '@/lib/svg-library'
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -27,7 +27,7 @@ export const SceneSchema = z.object({
 export type Scene = z.infer<typeof SceneSchema>
 
 function buildSystemPrompt(): string {
-  const assetList = SVG_LIBRARY.map((a) => `- ${a.id}: ${a.description}`).join('\n')
+  const assetList = getSvgLibrary().map((a) => `- ${a.id}: ${a.description}`).join('\n')
   return `You are a scene director for animated educational videos.
 
 Your task: place visual elements on a canvas (800x450px) to illustrate an educational topic.
