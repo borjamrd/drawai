@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Grid3X3 } from "lucide-react";
+import { ArrowRight, Grid3X3, Download, Video } from "lucide-react";
 import { SceneCanvas } from "@/components/SceneCanvas";
 import type { Scene } from "@/lib/genkit/scene-flow";
+import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -13,6 +14,195 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingVideo, setIsDownloadingVideo] = useState(false);
+
+  async function handleDownloadVideo() {
+    if (!scene) return;
+    setIsDownloadingVideo(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 450;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      if (!ctx) return;
+
+      // Load all images first
+      const imagePromises = scene.elements.map(async (el) => {
+        const asset = SVG_LIBRARY_MAP[el.library_id];
+        if (!asset) return null;
+        return new Promise<{ img: HTMLImageElement; el: typeof el }>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve({ img, el });
+          img.onerror = reject;
+          img.src = asset.svgPath;
+        });
+      });
+
+      const loaded = (await Promise.all(imagePromises)).filter(
+        (item): item is NonNullable<typeof item> => item !== null,
+      );
+
+      // Setup MediaRecorder
+      const stream = canvas.captureStream(30); // 30 FPS
+      const recorder = new MediaRecorder(stream, {
+        mimeType: "video/webm;codecs=vp9",
+        videoBitsPerSecond: 5000000, // 5Mbps for quality
+      });
+
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `escena-${scene.title.toLowerCase().replace(/\s+/g, "-")}.webm`;
+        a.click();
+        setIsDownloadingVideo(false);
+      };
+
+      recorder.start();
+
+      const startTime = performance.now();
+      const duration = scene.duration_ms;
+      const ANIM_DURATION = 600;
+
+      const render = () => {
+        const now = performance.now() - startTime;
+
+        // Draw background
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 800, 450);
+
+        loaded.forEach(({ img, el }) => {
+          const elapsed = now - el.entry_time_ms;
+          if (elapsed < 0) return;
+
+          const progress = Math.min(elapsed / ANIM_DURATION, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+
+          let opacity = 1;
+          let scale = 1;
+          let tx = 0;
+          let ty = 0;
+
+          // Simulate framer-motion effects
+          switch (el.entry_effect) {
+            case "fade":
+              opacity = progress;
+              break;
+            case "slide_left":
+              opacity = progress;
+              tx = -60 * (1 - easeOut);
+              break;
+            case "slide_right":
+              opacity = progress;
+              tx = 60 * (1 - easeOut);
+              break;
+            case "slide_up":
+              opacity = progress;
+              ty = 40 * (1 - easeOut);
+              break;
+            case "zoom":
+              opacity = progress;
+              scale = 0.3 + 0.7 * easeOut;
+              break;
+            case "bounce":
+              opacity = progress;
+              // Simple bounce simulation
+              const b = Math.sin(progress * Math.PI);
+              ty = -40 * (1 - easeOut) + (progress < 1 ? -10 * b : 0);
+              break;
+          }
+
+          const w = (el.width_pct / 100) * 800 * scale;
+          const h = (img.height / img.width) * w;
+          const x = (el.x / 100) * 800 + tx;
+          const y = (el.y / 100) * 450 + ty;
+
+          ctx.save();
+          ctx.globalAlpha = opacity;
+          ctx.translate(x, y);
+          ctx.drawImage(img, -w / 2, -h / 2, w, h);
+          ctx.restore();
+        });
+
+        if (now < duration) {
+          requestAnimationFrame(render);
+        } else {
+          // Add a small buffer at the end
+          setTimeout(() => recorder.stop(), 500);
+        }
+      };
+
+      render();
+    } catch (err) {
+      console.error("Error recording video:", err);
+      setError("No se pudo generar el video.");
+      setIsDownloadingVideo(false);
+    }
+  }
+
+  async function handleDownload() {
+    if (!scene) return;
+    setIsDownloading(true);
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 450;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      // Background
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, 800, 450);
+
+      // Load all images first
+      const imagePromises = scene.elements.map(async (el) => {
+        const asset = SVG_LIBRARY_MAP[el.library_id];
+        if (!asset) return null;
+
+        return new Promise<{
+          img: HTMLImageElement;
+          x: number;
+          y: number;
+          width_pct: number;
+        }>((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve({ img, x: el.x, y: el.y, width_pct: el.width_pct });
+          img.onerror = reject;
+          img.src = asset.svgPath;
+        });
+      });
+
+      const loadedImages = (await Promise.all(imagePromises)).filter(
+        (item): item is NonNullable<typeof item> => item !== null,
+      );
+
+      // Draw images in order
+      loadedImages.forEach(({ img, x, y, width_pct }) => {
+        const w = (width_pct / 100) * 800;
+        const h = (img.height / img.width) * w;
+        const posX = (x / 100) * 800 - w / 2;
+        const posY = (y / 100) * 450 - h / 2;
+        ctx.drawImage(img, posX, posY, w, h);
+      });
+
+      // Trigger download
+      const link = document.createElement("a");
+      link.download = `escena-${scene.title.toLowerCase().replace(/\s+/g, "-")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Error downloading scene:", err);
+      setError("No se pudo descargar la imagen.");
+    } finally {
+      setIsDownloading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -146,6 +336,44 @@ export default function Home() {
                 )}
               />
             </motion.button>
+
+            <div className="grid grid-cols-2 gap-2">
+              <motion.button
+                type="button"
+                disabled={!scene || isDownloading}
+                onClick={handleDownload}
+                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium border transition-all duration-200 shadow-sm hover:shadow-md",
+                  "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 disabled:opacity-40 disabled:pointer-events-none",
+                )}
+              >
+                {isDownloading ? (
+                  <span className="h-4 w-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" strokeWidth={1.5} />
+                )}
+                <span>Imagen</span>
+              </motion.button>
+
+              <motion.button
+                type="button"
+                disabled={!scene || isDownloadingVideo}
+                onClick={handleDownloadVideo}
+                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium border transition-all duration-200 shadow-sm hover:shadow-md",
+                  "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600 disabled:opacity-40 disabled:pointer-events-none",
+                )}
+              >
+                {isDownloadingVideo ? (
+                  <span className="h-4 w-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" />
+                ) : (
+                  <Video className="h-4 w-4" strokeWidth={1.5} />
+                )}
+                <span>Video</span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
