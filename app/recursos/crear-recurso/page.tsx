@@ -1,87 +1,227 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight, ArrowLeft, Wand2 } from 'lucide-react'
+import Link from 'next/link'
 import { createResource } from './actions'
-import { Button } from '@/components/ui/button'
 
 export default function CrearRecursoPage() {
   const [prompt, setPrompt] = useState('')
   const [options, setOptions] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedSvg, setSelectedSvg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleGenerate = async () => {
+    if (!prompt.trim()) return
     setLoading(true)
+    setError(null)
+    setOptions([])
+    setSelectedSvg(null)
     try {
       const res = await fetch('/api/generate-asset', {
         method: 'POST',
         body: JSON.stringify({ prompt }),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setOptions(data.options || [])
-    } catch (e) {
-      console.error(e)
+    } catch {
+      setError('No se pudo generar. Inténtalo de nuevo.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="py-12 px-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold">Nuevo Recurso AI</h1>
-          <p className="text-zinc-500">Describe el recurso y la IA lo dibujará para ti.</p>
-        </header>
-
-        <div className="space-y-4">
-           <div className="space-y-2">
-            <label className="text-sm font-medium">Descripción para la IA (Prompt)</label>
-            <div className="flex gap-2">
-              <input 
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="ej: un soldado colonial, un mapa de américa, un barco..." 
-                className="flex-1 rounded-md border border-zinc-200 px-3 py-2 text-sm dark:bg-zinc-950 dark:border-zinc-700" 
-              />
-              <Button onClick={handleGenerate} disabled={loading || !prompt}>
-                {loading ? 'Generando...' : 'Dibujar'}
-              </Button>
-            </div>
-          </div>
-
-          {options.length > 0 && (
-            <div className="grid grid-cols-3 gap-4">
-              {options.map((svg, i) => (
-                <div 
-                  key={i}
-                  onClick={() => setSelectedSvg(svg)}
-                  className={`cursor-pointer p-4 border rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center aspect-square ${selectedSvg === svg ? 'border-blue-500 ring-2 ring-blue-500' : 'border-zinc-200 dark:border-zinc-800'}`}
-                  dangerouslySetInnerHTML={{ __html: svg }}
-                />
-              ))}
-            </div>
-          )}
+    <div className="flex flex-col md:flex-row min-h-[100dvh]">
+      {/* Left panel: controls */}
+      <div className="w-full md:w-[400px] shrink-0 flex flex-col gap-8 px-8 py-10 bg-white dark:bg-zinc-950 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800">
+        <div className="space-y-1">
+          <Link
+            href="/recursos"
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mb-4"
+          >
+            <ArrowLeft className="h-3 w-3" strokeWidth={1.5} />
+            Biblioteca
+          </Link>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+            Nuevo recurso
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Describe el activo y la IA lo dibujará. Selecciona la versión que más te guste.
+          </p>
         </div>
 
-        {selectedSvg && (
-          <form action={createResource} className="space-y-6 bg-white p-8 rounded-xl border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-            <input type="hidden" name="svgCode" value={selectedSvg} />
-            <div className="space-y-2">
-              <label className="text-sm font-medium">ID único (slug)</label>
-              <input name="id" required placeholder="ej: casa_colonial" className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm dark:bg-zinc-950 dark:border-zinc-700" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre visible</label>
-              <input name="label" required placeholder="ej: Casa Colonial" className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm dark:bg-zinc-950 dark:border-zinc-700" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Descripción</label>
-              <textarea name="description" placeholder="Describe el elemento..." className="w-full h-24 rounded-md border border-zinc-200 px-3 py-2 text-sm dark:bg-zinc-950 dark:border-zinc-700" />
-            </div>
-            <Button type="submit" className="w-full">Guardar recurso</Button>
-          </form>
-        )}
+        {/* Step 1: prompt */}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="prompt" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Descripción
+            </label>
+            <textarea
+              id="prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="ej: un soldado colonial de pie con uniforme y rifle…"
+              rows={3}
+              disabled={loading}
+              className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
+            />
+            {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+          </div>
+
+          <motion.button
+            type="button"
+            onClick={handleGenerate}
+            disabled={loading || !prompt.trim()}
+            whileTap={{ scale: 0.97, y: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="flex items-center gap-2 self-start rounded-lg bg-zinc-950 dark:bg-white px-5 py-2.5 text-sm font-medium text-white dark:text-zinc-950 disabled:opacity-40 transition-opacity"
+          >
+            {loading ? (
+              <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4" strokeWidth={1.5} />
+            )}
+            {loading ? 'Dibujando…' : 'Dibujar'}
+          </motion.button>
+        </div>
+
+        {/* Step 2: metadata form (shown after selection) */}
+        <AnimatePresence>
+          {selectedSvg && (
+            <motion.form
+              key="metadata-form"
+              action={createResource}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+              className="flex flex-col gap-5 pt-2 border-t border-zinc-100 dark:border-zinc-800"
+            >
+              <input type="hidden" name="svgCode" value={selectedSvg} />
+
+              <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                Metadatos
+              </p>
+
+              {[
+                { name: 'id', label: 'Identificador', placeholder: 'ej: soldier_standing', hint: 'Snake_case, único.' },
+                { name: 'label', label: 'Nombre', placeholder: 'ej: Soldado Colonial', hint: null },
+                { name: 'description', label: 'Descripción', placeholder: 'Describe el activo para que la IA entienda cuándo usarlo.', hint: null, multiline: true },
+              ].map((field) => (
+                <div key={field.name} className="flex flex-col gap-2">
+                  <label htmlFor={field.name} className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    {field.label}
+                  </label>
+                  {field.multiline ? (
+                    <textarea
+                      id={field.name}
+                      name={field.name}
+                      required
+                      placeholder={field.placeholder}
+                      rows={3}
+                      className="resize-none rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
+                    />
+                  ) : (
+                    <input
+                      id={field.name}
+                      name={field.name}
+                      type="text"
+                      required
+                      placeholder={field.placeholder}
+                      className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-shadow"
+                    />
+                  )}
+                  {field.hint && (
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500">{field.hint}</p>
+                  )}
+                </div>
+              ))}
+
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.97, y: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                className="flex items-center gap-2 self-start rounded-lg bg-zinc-950 dark:bg-white px-5 py-2.5 text-sm font-medium text-white dark:text-zinc-950 transition-opacity hover:opacity-80"
+              >
+                <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+                Guardar recurso
+              </motion.button>
+            </motion.form>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Right panel: SVG options + selected preview */}
+      <div className="flex-1 flex items-center justify-center p-8 md:p-12 bg-zinc-50 dark:bg-zinc-900 overflow-auto">
+        <AnimatePresence mode="wait">
+          {loading && (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-2 gap-4 w-full max-w-lg"
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-xl bg-zinc-200 dark:bg-zinc-800 animate-pulse"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                />
+              ))}
+            </motion.div>
+          )}
+
+          {options.length > 0 && !loading && (
+            <motion.div
+              key="options"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col gap-4 w-full max-w-lg"
+            >
+              <p className="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                Selecciona una opción
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {options.map((svg, i) => (
+                  <motion.button
+                    key={i}
+                    type="button"
+                    onClick={() => setSelectedSvg(svg)}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 100, damping: 20, delay: i * 0.07 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={[
+                      'aspect-square cursor-pointer rounded-xl flex items-center justify-center p-8 border transition-all duration-150',
+                      selectedSvg === svg
+                        ? 'border-zinc-950 dark:border-white bg-white dark:bg-zinc-800 shadow-[0_0_0_2px] shadow-zinc-950 dark:shadow-white'
+                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 hover:border-zinc-400 dark:hover:border-zinc-500',
+                    ].join(' ')}
+                    dangerouslySetInnerHTML={{ __html: svg }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {!options.length && !loading && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-3 text-zinc-400 dark:text-zinc-600"
+            >
+              <Wand2 className="h-8 w-8" strokeWidth={1.5} />
+              <p className="text-sm">Las opciones generadas aparecerán aquí</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

@@ -15,11 +15,15 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex h-16 items-center px-6">
-        <span className="text-xl font-bold tracking-tight">DrawAI</span>
+    <div className="flex h-full w-56 shrink-0 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+      <div className="flex h-14 items-center gap-2 px-5 border-b border-zinc-100 dark:border-zinc-800/60">
+        <span className="text-sm font-semibold tracking-tight text-zinc-950 dark:text-white">
+          DrawAI
+        </span>
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+
+      <nav className="flex-1 py-3 flex flex-col gap-0.5 px-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -27,14 +31,20 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-150',
                 isActive
-                  ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white'
-                  : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white'
+                  ? 'text-zinc-950 dark:text-white bg-zinc-100 dark:bg-zinc-800/60'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/30'
               )}
             >
-              <item.icon className="mr-3 h-5 w-5 flex-shrink-0" aria-hidden="true" />
-              {item.name}
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] rounded-full bg-zinc-950 dark:bg-white" />
+              )}
+              <item.icon
+                className="h-4 w-4 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
+                strokeWidth={isActive ? 2 : 1.5}
+              />
+              <span>{item.name}</span>
             </Link>
           )
         })}

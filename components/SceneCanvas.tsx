@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, type TargetAndTransition } from 'framer-motion'
-import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
 import { SVG_LIBRARY_MAP } from '@/lib/svg-library-client'
 import type { Scene } from '@/lib/genkit/scene-flow'
 
@@ -37,10 +37,23 @@ export function SceneCanvas({ scene }: SceneCanvasProps) {
   }, [scene, playKey])
 
   return (
-    <div className="flex flex-col gap-4 items-start">
-      <h2 className="text-xl font-semibold">{scene.title}</h2>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 tracking-tight">
+          {scene.title}
+        </h2>
+        <motion.button
+          onClick={() => setPlayKey((k) => k + 1)}
+          whileTap={{ scale: 0.96, y: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+        >
+          <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
+          Repetir
+        </motion.button>
+      </div>
 
-      <div className="relative w-[800px] h-[450px] bg-white border rounded-lg overflow-hidden shadow-sm">
+      <div className="relative w-[800px] h-[450px] bg-white border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
         {scene.elements.map((el, i) => {
           if (!visibleIndices.has(i)) return null
           const asset = SVG_LIBRARY_MAP[el.library_id]
@@ -63,7 +76,7 @@ export function SceneCanvas({ scene }: SceneCanvasProps) {
                 transition={
                   el.entry_effect === 'bounce'
                     ? { type: 'spring', stiffness: 300, damping: 10 }
-                    : { duration: 0.5 }
+                    : { type: 'spring', stiffness: 100, damping: 20 }
                 }
               >
                 <img src={asset.svgPath} alt={asset.label} className="w-16 h-16" />
@@ -72,10 +85,6 @@ export function SceneCanvas({ scene }: SceneCanvasProps) {
           )
         })}
       </div>
-
-      <Button variant="outline" onClick={() => setPlayKey((k) => k + 1)}>
-        Reproducir de nuevo
-      </Button>
     </div>
   )
 }
