@@ -4,9 +4,10 @@ import fs from 'fs/promises'
 import path from 'path'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { SvgAsset } from '@/lib/svg-library'
+import { db } from '@/lib/db/index'
+import { assets } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
-const JSON_PATH = path.join(process.cwd(), 'data', 'svg-library.json')
 const ASSETS_DIR = path.join(process.cwd(), 'public', 'assets')
 
 export async function createResource(formData: FormData) {
@@ -17,64 +18,43 @@ export async function createResource(formData: FormData) {
 
   if (!id || !label || !imageData) throw new Error('Campos incompletos')
 
-  // 1. Save PNG file from base64
+  const existing = db.select().from(assets).where(eq(assets.id, id)).get()
+  if (existing) throw new Error('El ID ya existe')
+
   const fileName = `${id}.png`
   const filePath = path.join(ASSETS_DIR, fileName)
   await fs.writeFile(filePath, Buffer.from(imageData, 'base64'))
 
-  // 2. Update JSON
-  const rawData = await fs.readFile(JSON_PATH, 'utf8')
-  const library: SvgAsset[] = JSON.parse(rawData)
-
-  if (library.some(a => a.id === id)) throw new Error('El ID ya existe')
-
-  const newAsset: SvgAsset = {
-    id,
-    label,
-    description,
-    svgPath: `/assets/${fileName}`,
-    default_width_pct: 20
-  }
-
-  library.push(newAsset)
-  await fs.writeFile(JSON_PATH, JSON.stringify(library, null, 2))
+  db.insert(assets)
+    .values({
+      id,
+      label,
+      description,
+      svgPath: `/assets/${fileName}`,
+      defaultWidthPct: 20,
+    })
+    .run()
 
   revalidatePath('/recursos')
   redirect('/recursos')
 }
 
 export async function updateResource(id: string, label: string, description: string) {
-  const rawData = await fs.readFile(JSON_PATH, 'utf8')
-  const library: SvgAsset[] = JSON.parse(rawData)
+  const existing = db.select().from(assets).where(eq(assets.id, id)).get()
+  if (!existing) throw new Error('Recurso no encontrado')
 
-  const index = library.findIndex(a => a.id === id)
-  if (index === -1) throw new Error('Recurso no encontrado')
+  db.update(assets).set({ label, description }).where(eq(assets.id, id)).run()
 
-  library[index] = {
-    ...library[index],
-    label,
-    description
-  }
-
-  await fs.writeFile(JSON_PATH, JSON.stringify(library, null, 2))
   revalidatePath('/recursos')
 }
 
 export async function deleteResource(id: string) {
-  const rawData = await fs.readFile(JSON_PATH, 'utf8')
-  const library: SvgAsset[] = JSON.parse(rawData)
+  const existing = db.select().from(assets).where(eq(assets.id, id)).get()
+  if (!existing) throw new Error('Recurso no encontrado')
 
-  const index = library.findIndex(a => a.id === id)
-  if (index === -1) throw new Error('Recurso no encontrado')
+  db.delete(assets).where(eq(assets.id, id)).run()
 
-  const asset = library[index]
-  
-  // Remove from JSON
-  library.splice(index, 1)
-  await fs.writeFile(JSON_PATH, JSON.stringify(library, null, 2))
-
-  // Optionally delete the file
-  const fileName = path.basename(asset.svgPath)
+  const fileName = path.basename(existing.svgPath)
   const filePath = path.join(ASSETS_DIR, fileName)
   try {
     await fs.unlink(filePath)

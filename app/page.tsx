@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Grid3X3, Download, Video } from "lucide-react";
 import { SceneCanvas } from "@/components/SceneCanvas";
 import type { Scene, SceneElementImage, SceneElementText } from "@/lib/genkit/scene-flow";
-import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
+import { useAssetsMap } from "@/lib/svg-library-client";
 import { cn } from "@/lib/utils";
 
 const FONT_SIZE_PX: Record<string, number> = {
@@ -74,6 +74,7 @@ function applyTextElement(
 }
 
 export default function Home() {
+  const SVG_LIBRARY_MAP = useAssetsMap();
   const [prompt, setPrompt] = useState("");
   const [scene, setScene] = useState<Scene | null>(null);
   const [isLoading, setIsLoading] = useState(false);

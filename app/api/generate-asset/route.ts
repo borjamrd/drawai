@@ -1,8 +1,9 @@
-import { writeFileSync, readFileSync } from 'fs'
+import { writeFileSync } from 'fs'
 import { join } from 'path'
 import sharp from 'sharp'
 import { generateImageOptionsFlow } from '@/lib/genkit/scene-flow'
-import type { SvgAsset } from '@/lib/svg-library'
+import { db } from '@/lib/db/index'
+import { assets } from '@/lib/db/schema'
 
 function conceptToId(concept: string): string {
   return concept
@@ -22,35 +23,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Generate image
     const [base64Data] = await generateImageOptionsFlow(prompt)
 
-    // Derive asset ID and file paths
     const id = conceptToId(concept)
     const fileName = `${id}.png`
     const publicPath = join(process.cwd(), 'public', 'assets', fileName)
     const svgPath = `/assets/${fileName}`
 
-    // Remove white background → transparent, then save PNG
     const rawBuffer = Buffer.from(base64Data, 'base64')
     const transparentBuffer = await sharp(rawBuffer).unflatten().png().toBuffer()
     writeFileSync(publicPath, transparentBuffer)
 
-    // Append to svg-library.json (read → modify → write)
-    const jsonPath = join(process.cwd(), 'data', 'svg-library.json')
-    const library = JSON.parse(readFileSync(jsonPath, 'utf8')) as SvgAsset[]
-
-    // Skip if ID already exists (idempotent)
-    if (!library.some((a) => a.id === id)) {
-      library.push({
+    db.insert(assets)
+      .values({
         id,
         label: concept,
         description: prompt,
         svgPath,
-        default_width_pct: 20,
+        defaultWidthPct: 20,
       })
-      writeFileSync(jsonPath, JSON.stringify(library, null, 2))
-    }
+      .onConflictDoNothing()
+      .run()
 
     return Response.json({ id, svgPath })
   } catch {

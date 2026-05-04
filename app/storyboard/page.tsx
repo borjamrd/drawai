@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Layers } from 'lucide-react'
 import { StoryboardView } from '@/components/StoryboardView'
 import type { Presentation, ScenePlan } from '@/lib/presentation'
-import { loadPresentations, savePresentation } from '@/lib/presentation-storage'
+import { loadPresentations, savePresentation } from '@/lib/presentation-api'
 import type { MissingAssetProposal } from '@/lib/presentation'
 import type { PresentationPlan, Scene, VisualDescriptionOutput } from '@/lib/genkit/scene-flow'
 
@@ -17,14 +17,17 @@ export default function StoryboardPage() {
   const [phase, setPhase] = useState<Phase>('idle')
 
   useEffect(() => {
-    const presentations = loadPresentations()
-    if (presentations.length > 0) {
-      startTransition(() => {
-        setPresentation(presentations[0])
-        setPrompt(presentations[0]?.input ?? '')
-        setPhase('structure')
-      })
+    async function init() {
+      const pressList = await loadPresentations()
+      if (pressList.length > 0) {
+        startTransition(() => {
+          setPresentation(pressList[0])
+          setPrompt(pressList[0]?.input ?? '')
+          setPhase('structure')
+        })
+      }
     }
+    init()
   }, [])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +46,7 @@ export default function StoryboardPage() {
     setPresentation((prev) => {
       if (!prev) return prev
       const next = updater(prev)
-      savePresentation(next)
+      savePresentation(next).catch(console.error)
       return next
     })
   }
@@ -85,7 +88,7 @@ export default function StoryboardPage() {
       }
 
       setPresentation(newPresentation)
-      savePresentation(newPresentation)
+      savePresentation(newPresentation).catch(console.error)
       setPhase('structure')
     } catch {
       setError('Something went wrong, please try again.')

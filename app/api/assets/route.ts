@@ -1,5 +1,5 @@
-import { SVG_LIBRARY } from '@/lib/svg-library'
+import { getSvgLibrary } from '@/lib/svg-library'
 
 export async function GET() {
-  return Response.json(SVG_LIBRARY)
+  return Response.json(getSvgLibrary())
 }

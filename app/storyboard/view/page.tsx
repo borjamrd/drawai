@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { StoryboardViewer } from '@/components/StoryboardViewer'
-import { loadPresentation, loadPresentations } from '@/lib/presentation-storage'
+import { loadPresentation, loadPresentations } from '@/lib/presentation-api'
 import type { Presentation } from '@/lib/presentation'
 
 export default function StoryboardViewPage() {
@@ -13,22 +13,24 @@ export default function StoryboardViewPage() {
   const [presentation, setPresentation] = useState<Presentation | null>(null)
 
   useEffect(() => {
-    const id = searchParams.get('id')
-    let pres: Presentation | null = null
+    async function load() {
+      const id = searchParams.get('id')
+      let pres: Presentation | null = null
 
-    if (id) {
-      pres = loadPresentation(id)
-    } else {
-      // Fallback: load most recent presentation
-      const all = loadPresentations()
-      pres = all[0] ?? null
-    }
+      if (id) {
+        pres = await loadPresentation(id)
+      } else {
+        const all = await loadPresentations()
+        pres = all[0] ?? null
+      }
 
-    if (pres) {
-      startTransition(() => {
-        setPresentation(pres)
-      })
+      if (pres) {
+        startTransition(() => {
+          setPresentation(pres)
+        })
+      }
     }
+    load()
   }, [searchParams])
 
   if (!presentation) {

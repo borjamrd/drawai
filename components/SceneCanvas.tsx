@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, type TargetAndTransition } from "framer-motion";
 import { RotateCcw } from "lucide-react";
-import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
+import { useAssetsMap } from "@/lib/svg-library-client";
 import type { Scene } from "@/lib/genkit/scene-flow";
 
 type EntryEffect = "fade" | "slide_left" | "slide_right" | "slide_up" | "zoom" | "bounce";
@@ -56,6 +56,7 @@ interface SceneCanvasProps {
 }
 
 export function SceneCanvas({ scene, showGrid = false, compact = false }: SceneCanvasProps) {
+  const SVG_LIBRARY_MAP = useAssetsMap();
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
   const [playKey, setPlayKey] = useState(0);
 
