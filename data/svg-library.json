@@ -138,5 +138,12 @@
     "description": "A minimalist continuous-line illustration of an open scholarly book with clean pages and a small bookmark, symbolizing the study and official grammar of a language, on a white background.",
     "svgPath": "/assets/minimalist-continuous-line-illustration.png",
     "default_width_pct": 20
+  },
+  {
+    "id": "partially-unwrapped-chocolate",
+    "label": "A partially unwrapped chocolate bar",
+    "description": "A partially unwrapped chocolate bar standing vertically with its crinkled silver foil peeled down to reveal glossy rectangular squares, featuring a classic striped paper wrapper and one missing corner bite, illustrated in a minimalist continuous line style on a clean white void.",
+    "svgPath": "/assets/partially-unwrapped-chocolate.png",
+    "default_width_pct": 20
   }
 ]

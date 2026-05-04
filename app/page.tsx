@@ -4,9 +4,74 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Grid3X3, Download, Video } from "lucide-react";
 import { SceneCanvas } from "@/components/SceneCanvas";
-import type { Scene } from "@/lib/genkit/scene-flow";
+import type { Scene, SceneElementImage, SceneElementText } from "@/lib/genkit/scene-flow";
 import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
 import { cn } from "@/lib/utils";
+
+const FONT_SIZE_PX: Record<string, number> = {
+  xs: 10, sm: 13, md: 16, lg: 22, xl: 30, "2xl": 42, "3xl": 60,
+};
+
+const BACKGROUND_COLORS: Record<string, string> = {
+  white: "#FFFFFF",
+  "light-warm": "#FDF8F3",
+  dark: "#1C1C1E",
+  slate: "#1E293B",
+};
+
+function wrapCanvasText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+) {
+  const words = text.split(" ");
+  let line = "";
+  let currentY = y;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = word;
+      currentY += lineHeight;
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, x, currentY);
+}
+
+function applyTextElement(
+  ctx: CanvasRenderingContext2D,
+  el: SceneElementText,
+  opacity = 1,
+  tx = 0,
+  ty = 0,
+) {
+  const fontSize = FONT_SIZE_PX[el.font_size] ?? 16;
+  const weight =
+    el.font_weight === "bold" ? "bold"
+    : el.font_weight === "semibold" ? "600"
+    : el.font_weight === "medium" ? "500"
+    : "normal";
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  ctx.font = `${el.font_style === "italic" ? "italic " : ""}${weight} ${fontSize}px system-ui, sans-serif`;
+  ctx.fillStyle = el.color;
+  ctx.textAlign = (el.text_align ?? "center") as CanvasTextAlign;
+  ctx.textBaseline = "middle";
+  wrapCanvasText(
+    ctx,
+    el.content,
+    (el.x / 100) * 800 + tx,
+    (el.y / 100) * 450 + ty,
+    (el.width_pct / 100) * 800,
+    fontSize * 1.25,
+  );
+  ctx.restore();
+}
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -27,23 +92,22 @@ export default function Home() {
       const ctx = canvas.getContext("2d", { alpha: false });
       if (!ctx) return;
 
-      // Load all images first
-      const imagePromises = scene.elements.map(async (el) => {
-        const asset = SVG_LIBRARY_MAP[el.library_id];
-        if (!asset) return null;
-        return new Promise<{ img: HTMLImageElement; el: typeof el }>(
-          (resolve, reject) => {
+      // Load all image elements first (text elements rendered directly)
+      const imgMap = new Map<number, HTMLImageElement>();
+      await Promise.all(
+        scene.elements.map(async (el, i) => {
+          if (el.type !== "image") return;
+          const asset = SVG_LIBRARY_MAP[(el as SceneElementImage).library_id];
+          if (!asset) return;
+          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = "anonymous";
-            img.onload = () => resolve({ img, el });
+            img.onload = () => resolve(img);
             img.onerror = reject;
             img.src = asset.svgPath;
-          },
-        );
-      });
-
-      const loaded = (await Promise.all(imagePromises)).filter(
-        (item): item is NonNullable<typeof item> => item !== null,
+          });
+          imgMap.set(i, img);
+        }),
       );
 
       // Setup MediaRecorder
@@ -75,10 +139,10 @@ export default function Home() {
         const now = performance.now() - startTime;
 
         // Draw background
-        ctx.fillStyle = "white";
+        ctx.fillStyle = BACKGROUND_COLORS[scene.background ?? "white"];
         ctx.fillRect(0, 0, 800, 450);
 
-        loaded.forEach(({ img, el }) => {
+        scene.elements.forEach((el, i) => {
           const elapsed = now - el.entry_time_ms;
           if (elapsed < 0) return;
 
@@ -90,7 +154,7 @@ export default function Home() {
           let tx = 0;
           let ty = 0;
 
-          // Simulate framer-motion effects
+          // Simulate framer-motion entry effects
           switch (el.entry_effect) {
             case "fade":
               opacity = progress;
@@ -111,24 +175,29 @@ export default function Home() {
               opacity = progress;
               scale = 0.3 + 0.7 * easeOut;
               break;
-            case "bounce":
+            case "bounce": {
               opacity = progress;
-              // Simple bounce simulation
               const b = Math.sin(progress * Math.PI);
               ty = -40 * (1 - easeOut) + (progress < 1 ? -10 * b : 0);
               break;
+            }
           }
 
-          const w = (el.width_pct / 100) * 800 * scale;
-          const h = (img.height / img.width) * w;
-          const x = (el.x / 100) * 800 + tx;
-          const y = (el.y / 100) * 450 + ty;
-
-          ctx.save();
-          ctx.globalAlpha = opacity;
-          ctx.translate(x, y);
-          ctx.drawImage(img, -w / 2, -h / 2, w, h);
-          ctx.restore();
+          if (el.type === "image") {
+            const img = imgMap.get(i);
+            if (!img) return;
+            const w = (el.width_pct / 100) * 800 * scale;
+            const h = (img.height / img.width) * w;
+            const x = (el.x / 100) * 800 + tx;
+            const y = (el.y / 100) * 450 + ty;
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.translate(x, y);
+            ctx.drawImage(img, -w / 2, -h / 2, w, h);
+            ctx.restore();
+          } else if (el.type === "text") {
+            applyTextElement(ctx, el as SceneElementText, opacity, tx, ty);
+          }
         });
 
         if (now < duration) {
@@ -158,40 +227,38 @@ export default function Home() {
       if (!ctx) return;
 
       // Background
-      ctx.fillStyle = "white";
+      ctx.fillStyle = BACKGROUND_COLORS[scene.background ?? "white"];
       ctx.fillRect(0, 0, 800, 450);
 
-      // Load all images first
-      const imagePromises = scene.elements.map(async (el) => {
-        const asset = SVG_LIBRARY_MAP[el.library_id];
-        if (!asset) return null;
-
-        return new Promise<{
-          img: HTMLImageElement;
-          x: number;
-          y: number;
-          width_pct: number;
-        }>((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          img.onload = () =>
-            resolve({ img, x: el.x, y: el.y, width_pct: el.width_pct });
-          img.onerror = reject;
-          img.src = asset.svgPath;
-        });
-      });
-
-      const loadedImages = (await Promise.all(imagePromises)).filter(
-        (item): item is NonNullable<typeof item> => item !== null,
+      // Pre-fetch images into an index map (preserves layer order)
+      const imgMap = new Map<number, HTMLImageElement>();
+      await Promise.all(
+        scene.elements.map(async (el, i) => {
+          if (el.type !== "image") return;
+          const asset = SVG_LIBRARY_MAP[(el as SceneElementImage).library_id];
+          if (!asset) return;
+          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = asset.svgPath;
+          });
+          imgMap.set(i, img);
+        }),
       );
 
-      // Draw images in order
-      loadedImages.forEach(({ img, x, y, width_pct }) => {
-        const w = (width_pct / 100) * 800;
-        const h = (img.height / img.width) * w;
-        const posX = (x / 100) * 800 - w / 2;
-        const posY = (y / 100) * 450 - h / 2;
-        ctx.drawImage(img, posX, posY, w, h);
+      // Draw all elements in scene order (correct z-layering)
+      scene.elements.forEach((el, i) => {
+        if (el.type === "image") {
+          const img = imgMap.get(i);
+          if (!img) return;
+          const w = (el.width_pct / 100) * 800;
+          const h = (img.height / img.width) * w;
+          ctx.drawImage(img, (el.x / 100) * 800 - w / 2, (el.y / 100) * 450 - h / 2, w, h);
+        } else if (el.type === "text") {
+          applyTextElement(ctx, el as SceneElementText);
+        }
       });
 
       // Trigger download

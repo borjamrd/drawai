@@ -6,7 +6,22 @@ import { RotateCcw } from "lucide-react";
 import { SVG_LIBRARY_MAP } from "@/lib/svg-library-client";
 import type { Scene } from "@/lib/genkit/scene-flow";
 
-type EntryEffect = Scene["elements"][number]["entry_effect"];
+type EntryEffect = "fade" | "slide_left" | "slide_right" | "slide_up" | "zoom" | "bounce";
+
+const FONT_SIZE_PX: Record<string, number> = {
+  xs: 10, sm: 13, md: 16, lg: 22, xl: 30, "2xl": 42, "3xl": 60,
+};
+
+const FONT_WEIGHT_MAP: Record<string, string | number> = {
+  normal: 400, medium: 500, semibold: 600, bold: 700,
+};
+
+const BACKGROUND_COLORS: Record<string, string> = {
+  white: "#FFFFFF",
+  "light-warm": "#FDF8F3",
+  dark: "#1C1C1E",
+  slate: "#1E293B",
+};
 
 const ENTRY_VARIANTS: Record<
   EntryEffect,
@@ -83,7 +98,10 @@ export function SceneCanvas({ scene, showGrid = false, compact = false }: SceneC
         )}
       </div>}
 
-      <div className="relative w-[800px] h-[450px] bg-white border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
+      <div
+        className="relative w-[800px] h-[450px] border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]"
+        style={{ background: BACKGROUND_COLORS[scene?.background ?? "white"] }}
+      >
         {/* Hover cells — rendered below scene elements */}
         {showGrid && (
           <div
@@ -105,38 +123,69 @@ export function SceneCanvas({ scene, showGrid = false, compact = false }: SceneC
 
         {scene?.elements.map((el, i) => {
           if (!visibleIndices.has(i)) return null;
-          const asset = SVG_LIBRARY_MAP[el.library_id];
-          if (!asset) return null;
           const variant = ENTRY_VARIANTS[el.entry_effect];
+          const motionProps = {
+            initial: variant.initial,
+            animate: variant.animate,
+            transition:
+              el.entry_effect === "bounce"
+                ? ({ type: "spring", stiffness: 300, damping: 10 } as const)
+                : ({ type: "spring", stiffness: 100, damping: 20 } as const),
+          };
 
-          return (
-            <div
-              key={`${playKey}-${i}`}
-              className="absolute"
-              style={{
-                left: `${el.x}%`,
-                top: `${el.y}%`,
-                width: `${el.width_pct}%`,
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              <motion.div
-                initial={variant.initial}
-                animate={variant.animate}
-                transition={
-                  el.entry_effect === "bounce"
-                    ? { type: "spring", stiffness: 300, damping: 10 }
-                    : { type: "spring", stiffness: 100, damping: 20 }
-                }
+          if (el.type === "image") {
+            const asset = SVG_LIBRARY_MAP[el.library_id];
+            if (!asset) return null;
+            return (
+              <div
+                key={`${playKey}-${i}`}
+                className="absolute"
+                style={{
+                  left: `${el.x}%`,
+                  top: `${el.y}%`,
+                  width: `${el.width_pct}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
               >
-                <img
-                  src={asset.svgPath}
-                  alt={asset.label}
-                  style={{ width: "100%", height: "auto", display: "block" }}
-                />
+                <motion.div {...motionProps}>
+                  <img
+                    src={asset.svgPath}
+                    alt={asset.label}
+                    style={{ width: "100%", height: "auto", display: "block" }}
+                  />
+                </motion.div>
+              </div>
+            );
+          }
+
+          if (el.type === "text") {
+            return (
+              <motion.div
+                key={`${playKey}-${i}`}
+                {...motionProps}
+                className="absolute"
+                style={{
+                  left: `${el.x}%`,
+                  top: `${el.y}%`,
+                  width: `${el.width_pct}%`,
+                  transform: "translate(-50%, -50%)",
+                  fontSize: `${FONT_SIZE_PX[el.font_size] ?? 16}px`,
+                  color: el.color,
+                  fontWeight: FONT_WEIGHT_MAP[el.font_weight ?? "normal"],
+                  textAlign: el.text_align ?? "center",
+                  fontStyle: el.font_style ?? "normal",
+                  lineHeight: 1.25,
+                  userSelect: "none",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                }}
+              >
+                {el.content}
               </motion.div>
-            </div>
-          );
+            );
+          }
+
+          return null;
         })}
 
         {/* SVG grid lines — crisp 0.5px via pattern, always on top */}

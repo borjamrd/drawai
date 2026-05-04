@@ -10,29 +10,22 @@ const ai = genkit({
   model: googleAI.model("gemini-3-flash-preview"),
 });
 
-export const SceneElementSchema = z.object({
-  library_id: z
-    .string()
-    .describe("ID of the SVG asset from the available assets list"),
+const SceneElementBaseSchema = z.object({
   x: z
     .number()
     .min(0)
     .max(100)
-    .describe(
-      "Horizontal position as percentage of canvas width (0=left, 100=right)",
-    ),
+    .describe("Horizontal position as percentage of canvas width (0=left, 100=right)"),
   y: z
     .number()
     .min(0)
     .max(100)
-    .describe(
-      "Vertical position as percentage of canvas height (0=top, 100=bottom)",
-    ),
+    .describe("Vertical position as percentage of canvas height (0=top, 100=bottom)"),
   width_pct: z
     .number()
     .min(5)
     .max(100)
-    .describe("Percentage of canvas width (800px) this asset should occupy (5–100)"),
+    .describe("Percentage of canvas width (800px) this element should occupy (5–100)"),
   entry_time_ms: z
     .number()
     .nonnegative()
@@ -42,12 +35,63 @@ export const SceneElementSchema = z.object({
     .describe("Animation effect when the element enters the canvas"),
 });
 
+const SceneElementImageSchema = SceneElementBaseSchema.extend({
+  type: z.literal("image"),
+  library_id: z
+    .string()
+    .describe("ID of the SVG asset from the available assets list"),
+});
+
+const SceneElementTextSchema = SceneElementBaseSchema.extend({
+  type: z.literal("text"),
+  content: z
+    .string()
+    .max(80)
+    .describe("Text to display — keep under 60 characters for readability"),
+  font_size: z
+    .enum(["xs", "sm", "md", "lg", "xl", "2xl", "3xl"])
+    .describe("xs=tiny label, sm=caption/date, md=body, lg=subtitle, xl=title, 2xl=large title, 3xl=hero word"),
+  color: z
+    .string()
+    .describe("CSS color string, e.g. 'black' or 'white'"),
+  font_weight: z
+    .enum(["normal", "medium", "semibold", "bold"])
+    .optional()
+    .describe("Font weight (default: normal)"),
+  text_align: z
+    .enum(["left", "center", "right"])
+    .optional()
+    .describe("Text alignment (default: center)"),
+  font_style: z
+    .enum(["normal", "italic"])
+    .optional()
+    .describe("Font style (default: normal)"),
+});
+
+// Preprocess adds type:"image" to legacy elements missing the field (localStorage compat)
+export const SceneElementSchema = z.preprocess(
+  (el: unknown) => {
+    if (typeof el === "object" && el !== null && !("type" in el))
+      return { ...el, type: "image" };
+    return el;
+  },
+  z.discriminatedUnion("type", [SceneElementImageSchema, SceneElementTextSchema]),
+);
+
+export type SceneElement = z.infer<typeof SceneElementSchema>;
+export type SceneElementImage = z.infer<typeof SceneElementImageSchema>;
+export type SceneElementText = z.infer<typeof SceneElementTextSchema>;
+
 export const SceneSchema = z.object({
   title: z.string().describe("Short descriptive title for the scene"),
   duration_ms: z
     .number()
     .positive()
     .describe("Total scene duration in milliseconds"),
+  background: z
+    .enum(["white", "light-warm", "dark", "slate"])
+    .optional()
+    .describe("Background mood for this scene"),
   elements: z
     .array(SceneElementSchema)
     .describe("Ordered list of visual elements to place on the canvas"),
@@ -81,9 +125,37 @@ TIMING RULES:
 - Space subsequent entries 600-1200ms apart for dramatic effect.
 - duration_ms should be last entry_time_ms + 2000.
 
+ELEMENT TYPES — every element MUST have a "type" field: either "image" or "text".
+
+IMAGE elements (type: "image"):
+- Use library_id from the AVAILABLE ASSETS list above.
+- width_pct = percentage of 800px canvas the asset should visually fill.
+
+TEXT elements (type: "text"):
+- Use for scene titles, year/date stamps, character labels, captions, or any readable content.
+- content: the text string (max ~60 chars).
+- font_size: xs=tiny label | sm=caption/date | md=body text | lg=subtitle | xl=title | 2xl=large title | 3xl=hero word
+- color: "black" on white/light-warm backgrounds; "white" on dark/slate backgrounds.
+- font_weight: "normal" | "medium" | "semibold" | "bold"
+- text_align: "left" | "center" | "right"
+- width_pct for text = the column bounding box width (a centered title needs 60–80%).
+- entry_effect: prefer "fade" for titles and labels; "slide_up" for captions.
+
+TEXT PLACEMENT CONVENTIONS:
+- Scene title    → type="text", font_size="2xl", font_weight="bold", x=50, y=12, text_align="center", entry_time_ms=0, entry_effect="fade"
+- Year/date      → type="text", font_size="sm", x=88, y=6, width_pct=20, text_align="right", entry_time_ms=0, entry_effect="fade"
+- Character label→ type="text", font_size="xs", positioned just below its image, same entry_time_ms as the image, entry_effect="fade"
+- Bottom caption → type="text", font_size="md", x=50, y=90, text_align="center", entry_time_ms=<last_entry>+500, entry_effect="slide_up"
+
+BACKGROUND (optional):
+- white      → neutral default — clean educational slide
+- light-warm → warm, historical, or narrative tone
+- dark       → dramatic or night-time setting (all text MUST use color="white")
+- slate      → modern, data-focused feel (all text MUST use color="white")
+
 OUTPUT RULES:
 - Respond ONLY with valid JSON. No markdown fences, no explanation, no extra text.
-- Only use library_id values from the list above. Never invent new IDs.`;
+- Only use library_id values from the AVAILABLE ASSETS list above. Never invent new IDs.`;
 }
 
 const ScenePlanItemSchema = z.object({
